@@ -16,6 +16,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 find_package(SDL REQUIRED)
 find_package(SDL_net REQUIRED)
 find_package(SDL_ttf REQUIRED)
+find_package(Zlib REQUIRED)
+find_package(libpng13 REQUIRED)
 
 # ─────────────────────────────────────────
 #  Source Files
@@ -61,15 +63,3 @@ endif()
 #  Install Rules (optional)
 # ─────────────────────────────────────────
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-```
-
----
-
-## Project Structure
-```
-MySDLProject/
-├── CMakeLists.txt
-├── include/
-│   └── (your headers)
-└── src/
-    └── main.cpp
