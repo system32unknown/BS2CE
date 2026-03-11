@@ -133,9 +133,7 @@ void SDL_DrawFilledRect16(SDL_Surface *screen, int x, int y, int dx, int dy, Uin
 	if (!(dx * dy))
 		return;
 	SDL_Rect rect;
-	/*if (x < 1) { dx += x; x = 1; }
-	if (x >= screen->w) return;
-	if (x + dx >= screen->w - 1) dx = screen->w - 1 - x;*/
+
 	if (y < 0)
 	{
 		dy += y;

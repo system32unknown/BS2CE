@@ -32,7 +32,6 @@ typedef pair<vector<unsigned char> *, int> datapair;
 
 inline char get_token(const pair<datapair, datapair> &dpp)
 {
-  // cout << dpp.first.second << endl;
   return (*(dpp.first.first))[dpp.first.second];
 }
 
@@ -110,16 +109,6 @@ private:
 char *bf_exec(const std::string &code);
 std::string read_bf(std::istream &codestrm);
 
-/*char *read_bf(istream& codestrm)
-{
-  string codestr = "";
-
-  for (string tmp; getline(codestrm,tmp);)
-    codestr += tmp;
-
-  return codestr;
-}*/
-
 char *bf_exec(const string &bfcode)
 {
   vector<unsigned char> data(100000);
@@ -133,7 +122,6 @@ char *bf_exec(const string &bfcode)
 
   long int comment_count = 0;
 
-  // ((Code* . Codeptr) . (Data* . Dataptr)).
   vector<pair<datapair, datapair>> context_vec;
   context_vec.push_back(make_pair(make_pair(&code, 0),
                                   make_pair(&data, 0))); // Default context.
@@ -155,7 +143,6 @@ char *bf_exec(const string &bfcode)
           decr_byte(context_vec[it]);
           break;
         case '.':
-          // cout << (int)get_byte(context_vec[it]);
           out[outpos++] = get_byte(context_vec[it]);
           break;
         case ',':

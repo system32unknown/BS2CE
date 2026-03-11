@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "C:/Users/op582/Documents/Dev/SDL/include",
                 "C:/Users/op582/Documents/Dev/SDL_net/include",
-                "C:/Users/op582/Documents/Dev/SDL_ttf/include"
+                "C:/Users/op582/Documents/Dev/SDL_ttf/include",
+                "C:/Users/op582/Documents/Dev/libpng/include"
             ],
             "defines": [
                 "_DEBUG",

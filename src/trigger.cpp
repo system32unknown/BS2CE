@@ -20,7 +20,6 @@ struct mycomparison
 };
 
 std::priority_queue<Timer *, std::vector<Timer *>, mycomparison> frametriggers;
-// std::list<Timer*> frametriggers;
 std::list<Timer *> msecriggers;
 
 std::stack<Timer *> timerStack;
@@ -85,7 +84,6 @@ void deleteparams(Varint **v)
 
 void Action::exec()
 {
-	//  error("ACTION CALLED");
 }
 
 Action::~Action()
@@ -98,18 +96,6 @@ char *Action::toString()
 	sprintf(tmp, "NO ACTION");
 	return tmp;
 }
-
-/*bool existTrigger(char* triggername)
-{
-	if (triggername == 0) return false;
-	std::list<Trigger*>::iterator it = triggers.begin();
-	while ( it != triggers.end() )
-	{
-		if (!strcmp((*it)->name,name)) return true;
-		it++;
-	}
-	return false;
-}*/
 
 Trigger *findTrigger(char *triggername, int owner)
 {
@@ -130,7 +116,6 @@ Trigger *findTrigger(char *triggername, int owner)
 			t->deleted = 0;
 			t->name = "NO NAME";
 			t->actions.push_back(action);
-			//		  delete(name);
 			t->actioncount = t->actions.size();
 			return t;
 		}
@@ -254,8 +239,7 @@ void ActionExit::exec()
 	if (threadrunning)
 	{
 		threadrunning = false;
-		while (threadrunning == false)
-			;
+		while (threadrunning == false);
 	}
 	exit(0);
 }
@@ -759,9 +743,6 @@ ActionIf::~ActionIf()
 
 void ActionRemoveTrigger::exec()
 {
-	//	std::list<Action*>::iterator it;
-	//	for (it = findTrigger(trigger)->actions.begin(); it != findTrigger(trigger)->actions.end(); it++)
-	//		delete(*it);
 	Trigger *t = findTrigger(trigger, owner);
 	t->actions.clear();
 	t->deleted = execcounter;
@@ -838,10 +819,7 @@ void ActionElementBS1::exec()
 {
 	// ICON && menuorder
 	Uint16 e = findElement(elementname, true);
-	if (e == 1)
-		return;
-	//	clearDie(e);
-	//	clearInteraction(e);
+	if (e == 1) return;
 	setElementWeight(e, weight->val());
 	setElementSpray(e, spay->val());
 	setElementSlide(e, slide->val());
@@ -876,7 +854,6 @@ ActionElementBS1::~ActionElementBS1()
 	delete (slide);
 	delete (viscousity);
 	delete (menuorder);
-	//	delete (icon);
 }
 
 void ActionElementDie::exec()
@@ -1081,9 +1058,6 @@ char *ActionInteraction::toString()
 	}
 	else
 	{
-		//		tmp = new char[1024 + strlen(*i4) + strlen(*i5) + strlen(trigger->name) + strlen(at->text) + strlen(e)];
-		//		sprintf(tmp,"INTERACTIONTRIGGER%s \"%s\" \"%s\" \"%s\" %s%s", a, *i4, *i5, trigger->name, rate->text, e);
-
 		std::list<Trigger *>::iterator i1 = triggers.begin();
 		std::list<Varint *>::iterator i3 = rates.begin();
 		int len = 0;
@@ -2217,7 +2191,6 @@ char *ActionKey::toString()
 
 ActionKey::~ActionKey()
 {
-	// delete (keyname);
 	delete (v);
 }
 

@@ -452,7 +452,6 @@ Varint::Varint (char* v, int max)
 		text[0] = 0;
 		fixedvalue = 0;
 		ok = false;
-//		delete(v);
 		return;
 		function = 0;
 	}
@@ -550,13 +549,11 @@ Varint::Varint (char* v, int max)
 			{
 				ok = false;
 				delete (t2);
-//				if (brace) v[strlen(v)] = ')';
 				delete(ov);
 				return;
 			}
 			ok = true;
 			delete (t2);
-//			if (brace) v[strlen(v)] = ')';
 			delete(ov);
 			return;
 		}

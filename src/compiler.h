@@ -8,7 +8,6 @@
 #define COMPILER_REMOVE
 #define COMPILER_SDL_TTF
 #define COMPILER_SDL_NET
-// #define COMPILER_PPC
 
 #ifdef COMPILER_WINDOWS
 #define RANDOMNUMBER rand()

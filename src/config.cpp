@@ -830,12 +830,6 @@ Action *parseaction(Token *tokens, int owner)
 				((ActionTimer *)action)->trigger = t;
 				((ActionTimer *)action)->params = param;
 			}
-			else
-			{
-				//				delete (value);
-				//				delete (param);
-				//				delete (trigger);
-			}
 		}
 	}
 	else if (!strcmp(function, "ELEMENT") || !strcmp(function, "Element"))
@@ -852,10 +846,6 @@ Action *parseaction(Token *tokens, int owner)
 				((ActionElementDie *)action)->elementname = element_name;
 				((ActionElementDie *)action)->dieto = dieto;
 				((ActionElementDie *)action)->rate = rate;
-			}
-			else
-			{
-				//				delete (rate); delete (dieto);
 			}
 		}
 		else
@@ -917,22 +907,7 @@ Action *parseaction(Token *tokens, int owner)
 				((ActionElementBS1 *)action)->viscousity = viscousity;
 				((ActionElementBS1 *)action)->menuorder = menuorder;
 			}
-			else
-			{
-				/*				delete (rvalue);
-								delete (gvalue);
-								delete (bvalue);
-								delete (weight);
-								delete (spay);
-								delete (slide);
-								delete (viscousity);
-								delete (dierate);
-								delete (dieto);
-								delete (menuorder);
-								delete (icon);*/
-			}
 		}
-		//		if (!action) delete (element_name);
 	}
 	else if (!strcmp(function, "INTERACTION") || !strcmp(function, "Interaction") || !strcmp(function, "INTERACTIONAT") || !strcmp(function, "InteractionAt"))
 	{
@@ -989,12 +964,6 @@ Action *parseaction(Token *tokens, int owner)
 			}
 			((ActionInteraction *)action)->except = trigger;
 			((ActionInteraction *)action)->at = at;
-		}
-		else
-		{
-			/*			delete(rate);
-						delete(element1); delete(element2);
-						delete(trigger);*/
 		}
 	}
 	else if (!strcmp(function, "INTERACTIONCLEAR"))
@@ -1114,7 +1083,6 @@ Action *parseaction(Token *tokens, int owner)
 					}
 					else
 					{
-						//						delete (tmp);
 						icon = getPic("", "");
 					}
 					Varint *r = 0;
@@ -1158,10 +1126,6 @@ Action *parseaction(Token *tokens, int owner)
 					}
 				}
 			}
-		}
-		if (action == 0)
-		{
-			//			delete(function2);
 		}
 		delete (function3);
 	}
@@ -1274,13 +1238,6 @@ Action *parseaction(Token *tokens, int owner)
 				}
 			}
 		}
-		if (action == NULL)
-		{
-			/*			delete (function2);
-						delete (function3);
-						delete (function4);
-						delete (groupname);*/
-		}
 	}
 	else if (!strcmp(function, "LIST"))
 	{
@@ -1335,8 +1292,6 @@ Action *parseaction(Token *tokens, int owner)
 						((ActionList *)action)->function = ACTION_LIST_ACTIONS;
 					((ActionList *)action)->element = element;
 				}
-				/*				else
-									delete(element);*/
 			}
 		}
 		delete (function2);
@@ -1351,11 +1306,6 @@ Action *parseaction(Token *tokens, int owner)
 			((ActionSetVar *)action)->var = varname;
 			((ActionSetVar *)action)->value = v;
 			((ActionSetVar *)action)->t = 0;
-		}
-		else
-		{
-			//			delete (v);
-			//			delete (varname);
 		}
 	}
 	else if (!strcmp(function, "INC"))
@@ -1427,8 +1377,6 @@ Action *parseaction(Token *tokens, int owner)
 			action = new ActionGetVar;
 			((ActionGetVar *)action)->value = v;
 		}
-		//		else
-		//			delete (v);
 	}
 	else if (!strcmp(function, "GETFILE"))
 	{
@@ -1438,8 +1386,6 @@ Action *parseaction(Token *tokens, int owner)
 			action = new ActionGetFile;
 			((ActionGetFile *)action)->filename = v;
 		}
-		//		else
-		//			delete (v);
 	}
 	else if (!strcmp(function, "RESIZE"))
 	{
@@ -1451,11 +1397,6 @@ Action *parseaction(Token *tokens, int owner)
 			((ActionResize *)action)->h = h;
 			((ActionResize *)action)->w = w;
 		}
-		else
-		{
-			//			delete (h);
-			//			delete (w);
-		}
 	}
 	else if (!strcmp(function, "SCROLL"))
 	{
@@ -1466,11 +1407,6 @@ Action *parseaction(Token *tokens, int owner)
 			action = new ActionScroll;
 			((ActionScroll *)action)->x = x;
 			((ActionScroll *)action)->y = y;
-		}
-		else
-		{
-			//			delete (x);
-			//			delete (y);
 		}
 	}
 	else if (strstr(function, "http://") == function)
@@ -1513,12 +1449,6 @@ Action *parseaction(Token *tokens, int owner)
 			((ActionWhile *)action)->value = v;
 			((ActionWhile *)action)->trigger = parseTrigger(trigger, owner);
 			((ActionWhile *)action)->params = param;
-		}
-		else
-		{
-			//			delete (param);
-			//			delete (trigger);
-			//			delete (v);
 		}
 	}
 	else if (!strcmp(function, "IF"))
@@ -1599,12 +1529,6 @@ Action *parseaction(Token *tokens, int owner)
 				delete (tochar);
 				delete (dochar);
 			}
-			else
-			{
-				//			delete (param);
-				//			delete (trigger);
-				//			delete (v);
-			}
 		}
 	}
 	else if (!strcmp(function, "EXEC"))
@@ -1616,11 +1540,6 @@ Action *parseaction(Token *tokens, int owner)
 			action = new ActionExec;
 			((ActionExec *)action)->trigger = parseTrigger(trigger, owner);
 			((ActionExec *)action)->params = param;
-		}
-		else
-		{
-			//			delete (param);
-			//			delete (trigger);
 		}
 	}
 	else if (!strcmp(function, "SYSTEM"))
@@ -1642,10 +1561,6 @@ Action *parseaction(Token *tokens, int owner)
 		{
 			action = new ActionRemoveTrigger;
 			((ActionRemoveTrigger *)action)->trigger = trigger;
-		}
-		else
-		{
-			//			delete (trigger);
 		}
 	}
 	else if (!strcmp(function, "Message"))
@@ -1737,10 +1652,6 @@ Action *parseaction(Token *tokens, int owner)
 			else
 				((ActionMessage *)action)->varint = 0;
 		}
-		else
-		{
-			//			delete (message);
-		}
 	}
 	else if (!strcmp(function, "FILE"))
 	{
@@ -1765,10 +1676,6 @@ Action *parseaction(Token *tokens, int owner)
 			action = new ActionFile;
 			((ActionFile *)action)->filename = filename;
 			((ActionFile *)action)->function = ACTION_FILE_DELETE;
-		}
-		else
-		{
-			//			delete (message);
 		}
 	}
 	else if (!strcmp(function, "STATUS"))

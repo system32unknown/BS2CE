@@ -187,7 +187,7 @@ int load(char *filename)
 								break;
 						}
 					}
-					//						if ((elements[i].r == r) && (elements[i].g == g) && (elements[i].b == b)) { t = i; break; }
+
 					if (t == 1)
 						t = 0;
 					*((Uint16 *)screen->pixels + y * screen->pitch / 2 + x) = t;
@@ -204,8 +204,7 @@ int load(char *filename)
 		png_bytep *row_pointers;
 
 		FILE *fp = fopen(checkfilename(filename), "rb");
-		if (fp == 0)
-			return 0;
+		if (fp == 0) return 0;
 
 		fread(header, 1, 8, fp);
 		png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);

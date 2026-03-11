@@ -171,10 +171,6 @@ void initmenu(SDL_Surface *screen)
 	fgtransparentcolorb = (Var *)setVar("FGLAYERTRANSPARENTB", 0);
 	fgtransparentcolor = (Var *)setVar("FGLAYERTRANSPARENT", 0);
 	fglayeralpha = (Var *)setVar("FGLAYERALPHA", 255);
-	//	bgtransparentcolorr = (Var*)setVar("BGLAYERTRANSPARENTR",0);
-	//	bgtransparentcolorg = (Var*)setVar("BGLAYERTRANSPARENTG",0);
-	//	bgtransparentcolorb = (Var*)setVar("BGLAYERTRANSPARENTB",0);
-	//	bglayeralpha = (Var*)setVar("BGLAYERALPHA",255);
 
 	menucursor = SDL_GetCursor();
 	lastscreen = screen;
@@ -781,7 +777,7 @@ void clickmenu(SDL_Surface *screen, int x, int y, int b, int click)
 	static int lx, ly;
 	static bool nomousedown;
 	static int nomousedownbutton = 0;
-	//	static Trigger* consoleclick = findTrigger("CONSOLECLICK", 0);
+
 	int drawx, drawy;
 	drawx = (x - MENU_LEFT + scroll_left - 1) / zoomvar->value + 1;
 	if (zoomvar->value == 1)
@@ -855,7 +851,6 @@ void clickmenu(SDL_Surface *screen, int x, int y, int b, int click)
 					ossystem("telnet", "localhost 7777", false);
 				else if (b == 4)
 					ossystem("notepad", "console.txt", false);
-			//			if (b) consoleclick->exec(x,y,b,click);
 			return;
 		}
 	}

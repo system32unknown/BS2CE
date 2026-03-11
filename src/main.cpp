@@ -135,17 +135,11 @@ int main(int argc, char *argv[]) {
 	SDL_WM_SetIcon(SDL_LoadBMP(checkfilename("icon.bmp")), NULL);
 
 	int z = 1;
-#ifdef COMPILER_PPC
-	setVar("DEFAULTWIDTH", 120);
-	setVar("DEFAULTHEIGHT", 120);
-	setVar("DEFAULTMENUWIDTH", 17);
-	initsand(120, 120);
-#else
 	setVar("DEFAULTWIDTH", 420);
 	setVar("DEFAULTHEIGHT", 420);
 	setVar("DEFAULTMENUWIDTH", 33);
 	initsand(420 / z, 420 / z);
-#endif
+
 	setVar("ZOOM", z);
 	static Var *update = (Var *)setVar("UPDATEVIEW", 20);
 	static Var *speed = (Var *)setVar("SPEED", 0);
@@ -166,9 +160,6 @@ int main(int argc, char *argv[]) {
 	static Var *vunixtime = (Var *)setVar("UNIXTIME", 0);
 	static Var *rclickmod = (Var *)setVar("RCLICK", 0);
 	static Var *mclickmod = (Var *)setVar("MCLICK", 0);
-#ifdef COMPILER_PPC
-	setVar("PPC", 1);
-#endif
 
 	Trigger *precalc = findTrigger("PREPHYSICS", 0);
 	Trigger *postcalc = findTrigger("POSTPHYSICS", 0);
@@ -220,8 +211,7 @@ int main(int argc, char *argv[]) {
 					if (!isserver)
 					{
 						int t = connect("localhost", 7777);
-						// send(argv[i]);
-						// sendowner("DRAW ELEMENT:Earth CIRCLE 100 100 50", t, strlen("DRAW ELEMENT:Earth CIRCLE 100 100 50"));
+
 						sendowner(argv[i], t, strlen(argv[i]));
 						disconnect(t);
 						exit(0);

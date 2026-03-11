@@ -121,8 +121,6 @@ void resize(int w, int h)
 	outSurface->pixels = ((Uint16 *)outSurface->pixels + (ypitch));
 	doutSurface = (Uint16 *)outSurface->pixels - (Uint16 *)sandSurface->pixels - ypitch;
 
-	//	dpressureSurface = (Uint16*)pressureSurface->pixels - (Uint16*)sandSurface->pixels;
-
 	bufp = (Uint16 *)sandSurface->pixels + ypitch;
 	redrawmenu(3);
 	precalc(3);

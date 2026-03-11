@@ -327,7 +327,6 @@ void interactionTrigger(void *trigger, Uint16 element1, Uint16 element2, int x1,
 	varx2->value = x2;
 	vary2->value = y2;
 	((Trigger *)trigger)->exec();
-	//	setprecalc(3);
 }
 
 int addDie(Uint16 id, Uint16 dieto, Uint16 rate)

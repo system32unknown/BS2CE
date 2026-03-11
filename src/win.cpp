@@ -316,29 +316,7 @@ void screensavercheck()
 
 #endif
 
-#ifdef COMPILER_PPC
-
-char *checkfilename(char *filename)
-{
-	if (strlen(filename) == 0)
-		return filename;
-	if (filename[0] == '/')
-		return filename;
-	if (filename[0] == '\\')
-		return filename;
-	if (strstr(filename, ":"))
-		return filename;
-	char *t = new char[strlen(filename) + strlen(path) + 5];
-	sprintf(t, "%s%s", path, filename);
-	std::cout << t << std::endl;
-	return t;
-};
-
-#else
-
 char *checkfilename(char *filename)
 {
 	return filename;
 };
-
-#endif
