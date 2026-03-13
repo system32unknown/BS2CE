@@ -7,7 +7,7 @@
 #else
 	#include <stdlib.h>
 #endif
-#include "SDL.h"
+#include "SDL/SDL.h"
 #include <list>
 #include "sdlbasics.h"
 #include "console.h"

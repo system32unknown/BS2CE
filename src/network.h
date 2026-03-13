@@ -1,7 +1,7 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include "SDL.h"
+#include "SDL/SDL.h"
 #include "config.h"
 
 extern bool isserver;

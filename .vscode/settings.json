@@ -1,0 +1,7 @@
+{
+  "cmake.configureArgs": [
+    "-DCMAKE_C_COMPILER=C:/msys64/clang64/bin/clang.exe",
+    "-DCMAKE_CXX_COMPILER=C:/msys64/clang64/bin/clang++.exe",
+    "-DMSYS2_PREFIX=C:/msys64/clang64"
+  ]
+}

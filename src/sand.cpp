@@ -1,6 +1,7 @@
 #include "sand.h"
 #include "menu.h"
 #include "win.h"
+#include <cstdint>
 #define DOESEATELEMENTSMAX 256
 
 SDL_Surface *sandSurface = 0;
@@ -48,7 +49,7 @@ Uint16 **eatspeed;
 Uint16 **eatelement;
 Uint16 **eattoself;
 bool **eattrigger;
-int **eattoother;
+uintptr_t **eattoother;
 Uint16 **eatnot;
 bool **doeseatelement;
 Uint16 **life;
@@ -466,7 +467,7 @@ void precalc(int p)
 		eatelement = new Uint16 *[sandelements];
 		eattoself = new Uint16 *[sandelements];
 		eattrigger = new bool *[sandelements];
-		eattoother = new int *[sandelements];
+		eattoother = new uintptr_t *[sandelements];
 		eatnot = new Uint16 *[sandelements];
 		doeseatelement = new bool *[sandelements];
 		life = new Uint16 *[sandelements];
@@ -484,7 +485,7 @@ void precalc(int p)
 			eatelement[i] = new Uint16[eatmax[i]];
 			eattoself[i] = new Uint16[eatmax[i]];
 			eattrigger[i] = new bool[eatmax[i]];
-			eattoother[i] = new int[eatmax[i]];
+			eattoother[i] = new uintptr_t[eatmax[i]];
 			eatnot[i] = new Uint16[eatmax[i]];
 			doeseatelement[i] = new bool[DOESEATELEMENTSMAX + 16];
 			life[i] = new Uint16[MAX_DIES];
@@ -560,7 +561,7 @@ void precalc(int p)
 				eatelement[i] = new Uint16[eatmax[i]];
 				eattoself[i] = new Uint16[eatmax[i]];
 				eattrigger[i] = new bool[eatmax[i]];
-				eattoother[i] = new int[eatmax[i]];
+				eattoother[i] = new uintptr_t[eatmax[i]];
 				eatnot[i] = new Uint16[eatmax[i]];
 			}
 			end = elements[i].interactions->end();
@@ -586,7 +587,7 @@ void precalc(int p)
 						else
 						{
 							eattrigger[i][t] = false;
-							eattoother[i][t] = (unsigned long)(*it)->trigger;
+							eattoother[i][t] = (uintptr_t)(*it)->trigger;
 						}
 						eatnot[i][t] = (*it)->except;
 						doeseatelement[i][eatelement[i][t] % DOESEATELEMENTSMAX] = true;
@@ -626,7 +627,7 @@ void precalc(int p)
 void calc()
 {
 	SEEDRAND(seed->value++);
-	register Uint16 *o;
+	Uint16 *o;
 	static int usedcounter = 0;
 	static int oldborder;
 	static int oldreverse;
@@ -681,7 +682,7 @@ void calc()
 	static Uint16 *ybuf;
 	static Uint16 random, tmp = 0, tmp2;
 	tmp = 0;
-	register int t = 0;
+	int t = 0;
 	static Uint16 *op;
 	static int i, eatcounter, diecounter;
 	static bool goleft = true, goright = true;

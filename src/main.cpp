@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "SDL.h"
-#include "SDL_syswm.h"
-#include "SDL_net.h"
-#include "SDL_thread.h"
+#include "SDL/SDL.h"
+#include "SDL/SDL_syswm.h"
+#include "SDL/SDL_net.h"
+#include "SDL/SDL_thread.h"
 #include "sdlbasics.h"
 #include "menu.h"
 #include "config.h"

@@ -2,6 +2,7 @@
 #define VARS_H
 
 #include <list>
+#include <cstdint>
 #include "console.h"
 #include "sand.h"
 #include "elements.h"
@@ -39,7 +40,7 @@ struct Varint
 };
 
 std::list<Var *> *getVars();
-int setVar(char *name, int value, bool set = true);
+uintptr_t setVar(char *name, int value, bool set = true);
 int getVar(char *name, int *value);
 
 extern int *parameters[MAXPARAMETERS + 1];

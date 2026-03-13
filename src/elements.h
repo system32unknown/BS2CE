@@ -2,7 +2,7 @@
 #define ELEMENTS_H
 
 #include "compiler.h"
-#include "SDL.h"
+#include "SDL/SDL.h"
 #include <cstdlib>
 #include <list>
 #include "console.h"

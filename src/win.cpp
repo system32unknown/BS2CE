@@ -6,7 +6,7 @@ char *path;
 
 #ifdef COMPILER_WINDOWS
 
-#include "SDL_syswm.h"
+#include "SDL/SDL_syswm.h"
 #include "config.h"
 
 void osinit(char *filename)
@@ -230,18 +230,6 @@ char *inputbox()
 	return 0;
 }
 
-void screensavercheck()
-{
-	char *cmd = GetCommandLineA();
-	if (strstr(cmd, "/p"))
-		exit(0);
-	if (strstr(cmd, "/c"))
-	{
-		system("start %SystemRoot%\\notepad.exe %SystemRoot%\\config.bs2");
-		exit(0);
-	}
-}
-
 #else
 
 void osinit(char *filename)
@@ -308,10 +296,6 @@ void messagebox(char *text, char *title)
 char *inputbox()
 {
 	return 0;
-}
-
-void screensavercheck()
-{
 }
 
 #endif

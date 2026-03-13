@@ -5,7 +5,7 @@
 #define PORT 7777
 
 #ifdef COMPILER_SDL_NET
-#include "SDL_net.h"
+#include "SDL/SDL_net.h"
 #include "win.h"
 
 TCPsocket sock_server, sock_client[NET_MAX_CONNECTIONS];

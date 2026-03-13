@@ -8,9 +8,9 @@
 #else
 	#include <stdlib.h>
 #endif
-#include "SDL.h"
+#include "SDL/SDL.h"
 #ifdef COMPILER_SDL_TTF
-#include "SDL_ttf.h"
+#include "SDL/SDL_ttf.h"
 #endif
 #include <math.h>
 #include "console.h"

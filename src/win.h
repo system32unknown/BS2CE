@@ -5,7 +5,7 @@
 #define MAX_SWITCHES 512
 
 #include "compiler.h"
-#include "SDL.h"
+#include "SDL/SDL.h"
 
 #ifdef COMPILER_WINDOWS
 #include <windows.h>
@@ -23,6 +23,5 @@ bool yesnobox(char *text, char *title);
 void messagebox(char *text, char *title);
 char *inputbox();
 char *checkfilename(char *filename);
-void screensavercheck();
 
 #endif

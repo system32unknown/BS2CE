@@ -1189,7 +1189,7 @@ SDL_Surface *createmenu(std::list<Button *> *buttons, int align, int width, int 
 				{
 					if (h[line] < icon->h)
 						h[line] = icon->h;
-					if (minus <= 0)
+					if (minus[line] <= 0)
 						w[line] += icon->w;
 					else
 					{

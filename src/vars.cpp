@@ -3,6 +3,7 @@
 #include "sdlbasics.h"
 #include <math.h>
 #define PI 3.141592654
+#include <cstdint>
 #include <cstring>
 
 #define get_e int e = 0; if (!getVar(tmp, &e)) e = findElement(tmp,true);
@@ -18,7 +19,7 @@ std::list<Var*> *getVars()
 	return &vars;
 }
 
-int setVar(char* name, int value, bool set)
+uintptr_t setVar(char* name, int value, bool set)
 {
 	char tmp[255];
 	if (sscanf(name, "ELEMENT%s", (char*)&tmp))
@@ -160,7 +161,7 @@ int setVar(char* name, int value, bool set)
 		if (!strcmp((*it)->name,name))
 		{
 			if (set) (*it)->value = value;
-			return (long)*it;
+			return (uintptr_t)*it;
 		}
 		it++;
 	}
@@ -168,7 +169,7 @@ int setVar(char* name, int value, bool set)
 	strcpy(v->name,name);
 	v->value = value;
 	vars.push_back(v);
-	return (long)v;
+	return (uintptr_t)v;
 }
 
 int getVar(char* name, int *value)
@@ -246,13 +247,13 @@ int getVar(char* name, int *value)
 		else if (sscanf(tmp, "ICONTYPE:%s", (char*)&tmp))
 		{
 			get_e
-			*value = (long)(getElement(e)->icon->type);
+			*value = (uintptr_t)(getElement(e)->icon->type);
 			return 7;
 		}
 		else if (sscanf(tmp, "ICONTEXT:%s", (char*)&tmp))
 		{
 			get_e
-			*value = (long)(getElement(e)->icon->text);
+			*value = (uintptr_t)(getElement(e)->icon->text);
 			return 7;
 		}
 		else if (sscanf(tmp, "CUSTOMR1:%s", (char*)&tmp))
@@ -441,7 +442,7 @@ Varint::Varint (char* v, int max)
 	char *ov = v;
 	a = 0;
 	b = 0;
-	varvalue = false;
+	varvalue = nullptr;
 	this->max = max;
 	value = 0;
 	trigger = 0;

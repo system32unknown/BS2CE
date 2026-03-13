@@ -2,7 +2,7 @@
 #define PICS_H
 
 #include "compiler.h"
-#include "SDL.h"
+#include "SDL/SDL.h"
 
 struct Pic
 {

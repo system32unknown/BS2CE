@@ -1,7 +1,7 @@
 #ifndef SAND_H
 #define SAND_H
 #include "compiler.h"
-#include "SDL.h"
+#include "SDL/SDL.h"
 #include "sdlbasics.h"
 #include "console.h"
 #include "elements.h"
