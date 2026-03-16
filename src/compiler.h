@@ -36,5 +36,4 @@ inline int crand() {
 inline void seedrand(int seed) {
 	randseed = (unsigned long)seed;
 }
-
 #endif

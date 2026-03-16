@@ -617,7 +617,6 @@ void ActionSystem::exec() {
 }
 
 char* ActionSystem::toString() {
-
 	char* tmp = new char[1024 + strlen(cmd)];
 	sprintf(tmp, "SYSTEM \"%s\"", cmd);
 	return tmp;
@@ -790,16 +789,14 @@ void ActionInteraction::exec() {
 			g = getGroup(findGroup(*i + 6, false, -1));
 			for (it = g->elements.begin(); it != g->elements.end(); it++)
 				e1s.push_front(*it);
-		} else
-			e1s.push_back(findElement(*i, true));
+		} else e1s.push_back(findElement(*i, true));
 
 		for (i = elements2.begin(); i != elements2.end(); i++)
 			if (strstr(*i, "GROUP:") == *i) {
 				g = getGroup(findGroup(*i + 6, false, -1));
 				for (it = g->elements.begin(); it != g->elements.end(); it++)
 					e2s.push_front(*it);
-			} else
-				e2s.push_back(findElement(*i, true));
+			} else e2s.push_back(findElement(*i, true));
 			i2 = toothers.begin();
 			for (i = toselfs.begin(); i != toselfs.end(); i++) {
 				if (*i && (strstr(*i, "GROUP:") == *i)) {
@@ -835,12 +832,9 @@ void ActionInteraction::exec() {
 			for (rate = rates.begin(); rate != rates.end(); rate++) {
 				int tmp = (*rate)->val();
 				int tmp2;
-				if (restrate > 0)
-					tmp2 = tmp * 32768 / restrate;
-				else
-					tmp2 = 0;
-				if (tmp2 > 32768)
-					tmp2 = 32768;
+				if (restrate > 0) tmp2 = tmp * 32768 / restrate;
+				else tmp2 = 0;
+				if (tmp2 > 32768) tmp2 = 32768;
 				rs.push_back(tmp2);
 				restrate -= tmp;
 			}
@@ -856,8 +850,7 @@ void ActionInteraction::exec() {
 					for (e3 = e3s.begin(); e3 != e3s.end(); e3++) {
 						if ((*e3 == 32767) && (*e4 == 32767))
 							it++;
-						else
-							addInteraction(*e1, *e2, *e3, *e4, *it, ex, 0, at->val());
+						else addInteraction(*e1, *e2, *e3, *e4, *it, ex, 0, at->val());
 						e4++;
 					}
 					for (trigger = triggers.begin(); trigger != triggers.end(); trigger++) {
@@ -874,14 +867,14 @@ char* ActionInteraction::toString() {
 	if (except) {
 		e = new char[128 + strlen(except)];
 		sprintf(e, " \"%s\"", except);
-	} else
-		e = "";
+	} else e = "";
+
 	char* a;
 	if (at->val() != -1) {
 		a = new char[128 + strlen(at->text)];
 		sprintf(a, "AT %s", at->text);
-	} else
-		a = "";
+	} else a = "";
+
 	std::list<char*>::iterator i4 = elements1.begin();
 	std::list<char*>::iterator i5 = elements2.begin();
 	if (!triggers.size()) {
