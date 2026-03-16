@@ -46,10 +46,10 @@ void quickload(int slot) {
 int save(SDL_Surface* screen, char* filename) {
     Element* elements = getElement(0);
     const int elementsmaxnew = getelementsmax();
-    const std::size_t flen = strlen(filename);
+    const size_t flen = strlen(filename);
 
     auto endsWith = [&](const char* ext) {
-        const std::size_t elen = strlen(ext);
+        const size_t elen = strlen(ext);
         return (flen >= elen) && !strcmp(filename + flen - elen, ext);
     };
 
@@ -158,9 +158,7 @@ int save(SDL_Surface* screen, char* filename) {
         }
 
         png_init_io(png_ptr, fp);
-        png_set_IHDR(png_ptr, info_ptr,
-            static_cast<png_uint_32>(screen->w),
-            static_cast<png_uint_32>(screen->h),
+        png_set_IHDR(png_ptr, info_ptr, screen->w, screen->h,
             16, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
             PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_DEFAULT);
         png_write_info(png_ptr, info_ptr);

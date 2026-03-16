@@ -23,8 +23,7 @@ SDL_Surface* getBMP(char* file) {
 }
 
 SDL_Surface* Pic::getpic(int a) {
-	if (a > 127)
-		return SDL_CreateRGBSurface(SDL_SWSURFACE, 16, 32, 32, 0, 0, 0, 0);
+	if (a > 127) return SDL_CreateRGBSurface(SDL_SWSURFACE, 16, 32, 32, 0, 0, 0, 0);
 
 	if (!strcmp(type, "File") || !strcmp(type, "FILE")) {
 		if (old == nullptr) {
@@ -59,8 +58,7 @@ SDL_Surface* Pic::getpic(int a) {
 	if (!strcmp(type, "ELEMENTNAME")) {
 		int i = 0;
 		getVar(text, &i);
-		if (getElement(i))
-			return TTF_RenderText_Shaded(pic_font, getElement(i)->name, menufontfgcolor, menufontbgcolor);
+		if (getElement(i)) return TTF_RenderText_Shaded(pic_font, getElement(i)->name, menufontfgcolor, menufontbgcolor);
 	}
 #endif
 
@@ -68,10 +66,8 @@ SDL_Surface* Pic::getpic(int a) {
 		int i = 0;
 		getVar(text, &i);
 		if (getGroup(i)) {
-			if (getGroup(i)->icon)
-				return getGroup(i)->icon->getpic(a + 1);
-			else
-				return SDL_CreateRGBSurface(SDL_SWSURFACE, 16, 0, 0, 0, 255, 255, 0);
+			if (getGroup(i)->icon) return getGroup(i)->icon->getpic(a + 1);
+			else return SDL_CreateRGBSurface(SDL_SWSURFACE, 16, 0, 0, 0, 255, 255, 0);
 		}
 	}
 
@@ -79,18 +75,13 @@ SDL_Surface* Pic::getpic(int a) {
 	if (!strcmp(type, "GROUPNAME")) {
 		int i = 0;
 		getVar(text, &i);
-		if (getGroup(i))
-			return TTF_RenderText_Shaded(pic_font, getGroup(i)->name, menufontfgcolor, menufontbgcolor);
+		if (getGroup(i)) return TTF_RenderText_Shaded(pic_font, getGroup(i)->name, menufontfgcolor, menufontbgcolor);
 	}
 #endif
 
 	if (!strcmp(type, "HEX")) {
 		SDL_Surface* s = SDL_CreateRGBSurface(SDL_SWSURFACE, 32, 32, 16, 0, 0, 0, 0);
-		const Uint16 c = static_cast<Uint16>(SDL_MapRGB(
-			s->format,
-			static_cast<Uint8>(reinterpret_cast<Varint*>(r)->val()),
-			static_cast<Uint8>(reinterpret_cast<Varint*>(g)->val()),
-			static_cast<Uint8>(reinterpret_cast<Varint*>(b)->val())));
+		const Uint16 c = SDL_MapRGB(s->format, ((Varint*)r)->val(), ((Varint*)g)->val(), ((Varint*)b)->val());
 		Uint16* bufp = static_cast<Uint16*>(s->pixels);
 		for (int ii = 0; ii < 256; ii++) {
 			unsigned char t = static_cast<unsigned char>(text[ii]) - 48;
@@ -126,8 +117,7 @@ SDL_Surface* Pic::getpic(int a) {
 
 	if (!strcmp(type, "STAMP")) {
 		const int stamp = staticint + MAX_STAMPS;
-		if (!stamps[stamp])
-			return SDL_CreateRGBSurface(SDL_SWSURFACE, 16, 32, 32, 0, 255, 255, 0);
+		if (!stamps[stamp]) return SDL_CreateRGBSurface(SDL_SWSURFACE, 16, 32, 32, 0, 255, 255, 0);
 		SDL_Surface* s = SDL_CreateRGBSurface(SDL_SWSURFACE, stamps[stamp]->w, stamps[stamp]->h, 32, 0, 0, 0, 0);
 		SDL_BlitSurface(stamps[stamp], nullptr, s, nullptr);
 		return s;
@@ -137,15 +127,12 @@ SDL_Surface* Pic::getpic(int a) {
 }
 
 void Pic::calc() {
-	if (!strcmp(type, "ELEMENT") || !strcmp(type, "GROUP") ||
-		!strcmp(type, "GROUPNAME") || !strcmp(type, "ELEMENTNAME") ||
-		!strcmp(type, "STATICNUMBER")) {
-
+	if (!strcmp(type, "ELEMENT") || !strcmp(type, "GROUP") || !strcmp(type, "GROUPNAME") || !strcmp(type, "ELEMENTNAME") || !strcmp(type, "STATICNUMBER")) {
 		char t[16];
 		int i = 0;
 		getVar(text, &i);
 		snprintf(t, sizeof(t), "%i", i);
-		strncpy(text, t, sizeof(t)); // text is a fixed Pic member buffer
+		strncpy(text, t, sizeof(t));
 	}
 
 	if (!strcmp(type, "STAMP") || !strcmp(type, "STRING")) {
@@ -169,9 +156,7 @@ Pic* getPic(char* type, char* text) {
 	if (!picStack.empty()) {
 		r = picStack.top();
 		picStack.pop();
-	} else {
-		r = new Pic();
-	}
+	} else r = new Pic();
 
 	strncpy(r->type, type, sizeof(r->type) - 1);
 	r->type[sizeof(r->type) - 1] = 0;
@@ -207,16 +192,9 @@ void delPic(Pic* p) {
 char* Pic::toString() {
 	char* tmp;
 	if (!strcmp(type, "HEX")) {
-		const size_t len = 1024 + strlen(type) + strlen(text)
-			+ strlen(reinterpret_cast<Varint*>(r)->text)
-			+ strlen(reinterpret_cast<Varint*>(g)->text)
-			+ strlen(reinterpret_cast<Varint*>(b)->text);
+		const size_t len = 1024 + strlen(type) + strlen(text) + strlen(((Varint*)r)->text) + strlen(((Varint*)g)->text) + strlen(((Varint*)b)->text);
 		tmp = new char[len];
-		snprintf(tmp, len, "%s \"%s\" %s %s %s",
-			type, text,
-			reinterpret_cast<Varint*>(r)->text,
-			reinterpret_cast<Varint*>(g)->text,
-			reinterpret_cast<Varint*>(b)->text);
+		snprintf(tmp, len, "%s \"%s\" %s %s %s", type, text, ((Varint*)r)->text, ((Varint*)g)->text, ((Varint*)b)->text);
 	} else {
 		const size_t len = 1024 + strlen(type) + strlen(text);
 		tmp = new char[len];

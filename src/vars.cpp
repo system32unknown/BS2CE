@@ -250,7 +250,7 @@ int getVar(char* name, int* value) {
 		}
 	} else if (sscanf(name, "GROUP:%254s", tmp)) {
 		int val = 0;
-		const std::size_t tmplen = strlen(tmp);
+		const size_t tmplen = strlen(tmp);
 		for (unsigned int i = 0; i < tmplen - 1; i++) {
 			if (tmp[i] == ':') {
 				tmp[i] = 0;
@@ -263,7 +263,7 @@ int getVar(char* name, int* value) {
 		return true;
 	} else if (sscanf(name, "GROUPORDER:%254s", tmp)) {
 		int val = 0;
-		const std::size_t tmplen = strlen(tmp);
+		const size_t tmplen = strlen(tmp);
 		for (unsigned int i = 0; i < tmplen - 1; i++) {
 			if (tmp[i] == ':') {
 				tmp[i] = 0;
@@ -381,8 +381,7 @@ Varint::Varint(char* v, int max) {
 
 		Token tokens(v + brace);
 		char* t = tokens.getToken();
-		if (!strcmp(t, "SIN") || !strcmp(t, "COS") || !strcmp(t, "SQRT") || !strcmp(t, "TAN") ||
-			!strcmp(t, "SIN-1") || !strcmp(t, "COS-1") || !strcmp(t, "SQRT-1")) {
+		if (!strcmp(t, "SIN") || !strcmp(t, "COS") || !strcmp(t, "SQRT") || !strcmp(t, "TAN") || !strcmp(t, "SIN-1") || !strcmp(t, "COS-1") || !strcmp(t, "SQRT-1")) {
 			char* t2 = tokens.getToken();
 			if (!strcmp(t, "SIN")) { a = new Varint(t2, max, 100); function = 1; } else if (!strcmp(t, "COS")) { a = new Varint(t2, max, 101); function = 1; } else if (!strcmp(t, "SQRT")) { a = new Varint(t2, max, 102); function = 1; } else if (!strcmp(t, "TAN")) { a = new Varint(t2, max, 103); function = 1; } else if (!strcmp(t, "SIN-1")) { a = new Varint(t2, max, 104); function = 1; } else if (!strcmp(t, "COS-1")) { a = new Varint(t2, max, 105); function = 1; } else if (!strcmp(t, "TAN-1")) { a = new Varint(t2, max, 106); function = 1; }
 		} else {
@@ -476,7 +475,6 @@ Varint::Varint(char* v, int max) {
 				strcpy(value, v);
 			} else if (strchr(t, '[') && (strchr(t, '[') < strchr(t, ']'))) {
 				*(strchr(t, ']')) = 0;
-				// FIX: original allocated strlen(strchr(t,'[')) which is one byte short of null term
 				const char* bracket_start = strchr(t, '[') + 1;
 				char* tmp2 = new char[strlen(bracket_start) + 1];
 				strcpy(tmp2, bracket_start);
@@ -486,8 +484,7 @@ Varint::Varint(char* v, int max) {
 				function = 300;
 			} else {
 				for (auto* vp : vars) {
-					if (!strcmp(vp->name, t))
-						varvalue = vp;
+					if (!strcmp(vp->name, t)) varvalue = vp;
 				}
 				if (varvalue == nullptr) {
 					varvalue = new Var;
@@ -506,8 +503,8 @@ Varint::Varint(char* v, int max) {
 Varint::~Varint() {
 	delete a;
 	delete b;
-	delete[] text;   // FIX: text is always allocated with new char[]
-	delete[] value;  // FIX: value is allocated with new char[] when set
+	delete[] text;
+	delete[] value;
 }
 
 int Varint::val() {
@@ -521,7 +518,7 @@ int Varint::val() {
 		debug = this;
 		int v = val();
 		debug = nullptr;
-		snprintf(tmp, 512 + strlen(text), "calculated  var: %s = %i", text, v);
+		snprintf(tmp, 512 + strlen(text), "calculated var: %s = %i", text, v);
 		std::cout << tmp << std::endl;
 		delete[] tmp;
 		return v;

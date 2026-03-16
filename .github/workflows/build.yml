@@ -18,11 +18,11 @@ jobs:
     steps:
       # ── Checkout ────────────────────────────────────────────────
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
 
       # ── Set up MSYS2 CLANG64 ────────────────────────────────────
       - name: Set up MSYS2
-        uses: msys2/setup-msys2@v2
+        uses: msys2/setup-msys2@main
         with:
           msystem: CLANG64
           update: true
@@ -52,7 +52,7 @@ jobs:
 
       # ── Upload Artifact ─────────────────────────────────────────
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: BS2Plus-windows
           path: build/bin/
@@ -65,7 +65,7 @@ jobs:
     steps:
       # ── Checkout ────────────────────────────────────────────────
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
 
       # ── Install dependencies ─────────────────────────────────────
       - name: Install dependencies
@@ -96,7 +96,7 @@ jobs:
 
       # ── Upload Artifact ─────────────────────────────────────────
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: BS2Plus-linux
           path: build/bin/

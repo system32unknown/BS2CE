@@ -717,27 +717,27 @@ void calc() {
 								if (RANDOMNUMBER < eatspeed[t][eatcounter]) {
 									*(o + dontp) = y - reverse;
 									tmp2 = RANDOMNUMBER % tmp2;
-									INTERACTION(o + yr, 0, yr / std::abs(yr))
-										INTERACTION(o - yr, 0, -yr / std::abs(yr))
-										INTERACTION(o - r, -r / std::abs(r), 0)
-										INTERACTION(o + r, r / std::abs(r), 0)
+									INTERACTION(o + yr, 0, yr / abs(yr))
+										INTERACTION(o - yr, 0, -yr / abs(yr))
+										INTERACTION(o - r, -r / abs(r), 0)
+										INTERACTION(o + r, r / abs(r), 0)
 								}
 							} else {
 								tmp2 = 0;
 								if (RANDOMNUMBER < eatspeed[t][eatcounter]) {
-									INTERACTION(o - r, -r / std::abs(r), 0)
+									INTERACTION(o - r, -r / abs(r), 0)
 										tmp2 = 0;
 								}
 								if (RANDOMNUMBER < eatspeed[t][eatcounter]) {
-									INTERACTION(o + r, r / std::abs(r), 0)
+									INTERACTION(o + r, r / abs(r), 0)
 										tmp2 = 0;
 								}
 								if (RANDOMNUMBER < eatspeed[t][eatcounter]) {
-									INTERACTION(o + yr, 0, yr / std::abs(yr))
+									INTERACTION(o + yr, 0, yr / abs(yr))
 										tmp2 = 0;
 								}
 								if (RANDOMNUMBER < eatspeed[t][eatcounter]) {
-									INTERACTION(o - yr, 0, -yr / std::abs(yr))
+									INTERACTION(o - yr, 0, -yr / abs(yr))
 								}
 							}
 						}
@@ -780,28 +780,28 @@ void calc() {
 								if (tmp2) {
 									*(o + dontp) = y - reverse;
 									tmp2 = RANDOMNUMBER % tmp2;
-									INTERACTION_ALL(o - r, -r / std::abs(r), 0)
-										INTERACTION_ALL(o + r, r / std::abs(r), 0)
-										INTERACTION_ALL(o + yr, 0, yr / std::abs(yr))
-										INTERACTION_ALL(o - yr, 0, -yr / std::abs(yr))
+									INTERACTION_ALL(o - r, -r / abs(r), 0)
+										INTERACTION_ALL(o + r, r / abs(r), 0)
+										INTERACTION_ALL(o + yr, 0, yr / abs(yr))
+										INTERACTION_ALL(o - yr, 0, -yr / abs(yr))
 								}
 							}
 						} else {
 							tmp2 = 0;
 							if (RANDOMNUMBER < eatspeed[t][eatcounter]) {
-								INTERACTION_ALL(o - r, -r / std::abs(r), 0)
+								INTERACTION_ALL(o - r, -r / abs(r), 0)
 									tmp2 = 0;
 							}
 							if (RANDOMNUMBER < eatspeed[t][eatcounter]) {
-								INTERACTION_ALL(o + r, r / std::abs(r), 0)
+								INTERACTION_ALL(o + r, r / abs(r), 0)
 									tmp2 = 0;
 							}
 							if (RANDOMNUMBER < eatspeed[t][eatcounter]) {
-								INTERACTION_ALL(o + yr, 0, yr / std::abs(yr))
+								INTERACTION_ALL(o + yr, 0, yr / abs(yr))
 									tmp2 = 0;
 							}
 							if (RANDOMNUMBER < eatspeed[t][eatcounter]) {
-								INTERACTION_ALL(o - yr, 0, -yr / std::abs(yr))
+								INTERACTION_ALL(o - yr, 0, -yr / abs(yr))
 							}
 						}
 					}
@@ -833,9 +833,13 @@ void calc() {
 						} else if (w > *(aweight + *(op + i))) {
 							if (w > *(aweight + *(op - i))) {
 								if (random % 2) goright = false;
-								else { goleft = false; break; }
+								else {
+									goleft = false;
+									break;
+								}
 							} else {
-								goleft = false; break;
+								goleft = false;
+								break;
 							}
 						}
 						if (w <= *(aweight + *(o - i))) {
@@ -843,9 +847,13 @@ void calc() {
 						} else if (w > *(aweight + *(op - i))) {
 							if (w > *(aweight + *(op + i))) {
 								if (random % 2) goright = false;
-								else { goleft = false; break; }
+								else {
+									goleft = false;
+									break;
+								}
 							} else {
-								goright = false; break;
+								goright = false;
+								break;
 							}
 						}
 					} while (goleft && goright && i++);
@@ -871,8 +879,7 @@ void calc() {
 #ifdef COMPILER_GCC
 				do
 					while (!(*(long*)(o - 2))) o -= 2;
-				while (*(skip + *(--o)) && *(skip + *(--o)) &&
-					*(skip + *(--o)) && *(skip + *(--o)));
+				while (*(skip + *(--o)) && *(skip + *(--o)) && *(skip + *(--o)) && *(skip + *(--o)));
 #else
 				while (!--o);
 				while (*(skip + *o)) o--;
@@ -881,8 +888,7 @@ void calc() {
 #ifdef COMPILER_GCC
 				do
 					while (!(*(long*)(o + 1))) o += 2;
-				while (*(skip + *(++o)) && *(skip + *(++o)) &&
-					*(skip + *(++o)) && *(skip + *(++o)));
+				while (*(skip + *(++o)) && *(skip + *(++o)) && *(skip + *(++o)) && *(skip + *(++o)));
 #else
 				while (!++o);
 				while (*(skip + *o)) o++;
@@ -891,7 +897,7 @@ void calc() {
 		} while (o != end);
 
 		if (reverse > 0) --y;
-		else             ++y;
+		else ++y;
 	}
 
 	o = reinterpret_cast<Uint16*>(bufp - width);

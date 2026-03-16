@@ -13,34 +13,34 @@ char* path = nullptr;
 
 void osinit(char* filename) {
 	path = new char[strlen(filename) + 1];
-	std::strcpy(path, filename);
+	strcpy(path, filename);
 
 	// Find the last path separator to isolate the directory portion
 	char* tmp = nullptr;
 	char* tmp2 = path;
-	while ((tmp = std::strchr(tmp2, '/')) || (tmp = std::strchr(tmp2, '\\')))
+	while ((tmp = strchr(tmp2, '/')) || (tmp = strchr(tmp2, '\\')))
 		tmp2 = tmp + 1;
 	*tmp2 = '\0';
 	SetCurrentDirectoryA(path);
 
-	if (std::strcmp(filename + std::strlen(filename) - 4, ".exe") != 0) return;
+	if (strcmp(filename + strlen(filename) - 4, ".exe") != 0) return;
 
-	const std::size_t cmdlen = std::strlen(filename) + 20;
+	const size_t cmdlen = strlen(filename) + 20;
 	char* command = new char[cmdlen];
-	std::snprintf(command, cmdlen, "\"%s\" \"%s\"", filename, "%1");
+	snprintf(command, cmdlen, "\"%s\" \"%s\"", filename, "%1");
 
 	HKEY hKey;
 
 	RegCreateKeyA(HKEY_CLASSES_ROOT, "bs2mod\\shell\\open\\command", &hKey);
-	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(command), static_cast<DWORD>(std::strlen(command) + 1));
+	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(command), static_cast<DWORD>(strlen(command) + 1));
 	RegCloseKey(hKey);
 
 	RegCreateKeyA(HKEY_CLASSES_ROOT, "bs2mod\\DefaultIcon", &hKey);
-	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(filename), static_cast<DWORD>(std::strlen(filename) + 1));
+	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(filename), static_cast<DWORD>(strlen(filename) + 1));
 	RegCloseKey(hKey);
 
 	RegCreateKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Classes\\bs2mod\\shell\\open\\command", &hKey);
-	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(command), static_cast<DWORD>(std::strlen(command) + 1));
+	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(command), static_cast<DWORD>(strlen(command) + 1));
 	RegCloseKey(hKey);
 
 	RegCreateKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Classes\\bs2mod", &hKey);
@@ -51,19 +51,19 @@ void osinit(char* filename) {
 	RegCloseKey(hKey);
 
 	RegCreateKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Classes\\bs2mod\\DefaultIcon", &hKey);
-	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(filename), static_cast<DWORD>(std::strlen(filename) + 1));
+	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(filename), static_cast<DWORD>(strlen(filename) + 1));
 	RegCloseKey(hKey);
 
 	RegCreateKeyA(HKEY_CLASSES_ROOT, "bs2addon\\shell\\open\\command", &hKey);
-	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(command), static_cast<DWORD>(std::strlen(command) + 1));
+	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(command), static_cast<DWORD>(strlen(command) + 1));
 	RegCloseKey(hKey);
 
 	RegCreateKeyA(HKEY_CLASSES_ROOT, "bs2addon\\DefaultIcon", &hKey);
-	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(filename), static_cast<DWORD>(std::strlen(filename) + 1));
+	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(filename), static_cast<DWORD>(strlen(filename) + 1));
 	RegCloseKey(hKey);
 
 	RegCreateKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Classes\\bs2addon\\shell\\open\\command", &hKey);
-	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(command), static_cast<DWORD>(std::strlen(command) + 1));
+	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(command), static_cast<DWORD>(strlen(command) + 1));
 	RegCloseKey(hKey);
 
 	RegCreateKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Classes\\bs2addon", &hKey);
@@ -74,7 +74,7 @@ void osinit(char* filename) {
 	RegCloseKey(hKey);
 
 	RegCreateKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Classes\\bs2addon\\DefaultIcon", &hKey);
-	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(filename), static_cast<DWORD>(std::strlen(filename) + 1));
+	RegSetValueExA(hKey, "", 0, REG_SZ, reinterpret_cast<const BYTE*>(filename), static_cast<DWORD>(strlen(filename) + 1));
 	RegCloseKey(hKey);
 
 	DragAcceptFiles(GetActiveWindow(), TRUE);
@@ -85,8 +85,7 @@ void osinit(char* filename) {
 void sysmessage(SDL_SysWMmsg* msg) {
 	if (msg->msg == WM_DROPFILES) {
 		char tmp[256];
-		const int count = static_cast<int>(
-			DragQueryFile(reinterpret_cast<HDROP>(msg->wParam), 0xFFFFFFFF, nullptr, 0));
+		const int count = static_cast<int>(DragQueryFile(reinterpret_cast<HDROP>(msg->wParam), 0xFFFFFFFF, nullptr, 0));
 		for (int i = 0; i < count; i++) {
 			DragQueryFileA(reinterpret_cast<HDROP>(msg->wParam), i, tmp, sizeof(tmp) - 1);
 			parsefile(tmp, 0);
@@ -112,10 +111,10 @@ void ossystem(char* cmd, char* parameters, bool wait, bool hidden) {
 		// No parameters: write cmd to a temp batch file and execute it
 		{
 			std::ofstream batchfile("tmp.bat", std::ios::out);
-			batchfile.write(cmd, static_cast<std::streamsize>(std::strlen(cmd)));
+			batchfile.write(cmd, static_cast<std::streamsize>(strlen(cmd)));
 		} // closed by RAII
 		ossystem("tmp.bat", const_cast<char*>(""), wait, hidden);
-		std::remove("tmp.bat");
+		remove("tmp.bat");
 	}
 }
 
@@ -134,11 +133,11 @@ void mousebuttonbug(bool mouseup) {
 int copyStringToClipboard(char* source) {
 	if (!OpenClipboard(nullptr)) return 0;
 	EmptyClipboard();
-	const std::size_t len = std::strlen(source) + 1;
+	const size_t len = strlen(source) + 1;
 	HGLOBAL clipbuffer = GlobalAlloc(GMEM_DDESHARE, len);
 	if (!clipbuffer) { CloseClipboard(); return 0; }
 	char* buffer = static_cast<char*>(GlobalLock(clipbuffer));
-	std::strcpy(buffer, source);
+	strcpy(buffer, source);
 	GlobalUnlock(clipbuffer);
 	SetClipboardData(CF_TEXT, clipbuffer);
 	CloseClipboard();
@@ -159,8 +158,7 @@ char* opendialog(char* filter, char* defaultname) {
 	char* szFile = new char[260];
 	ZeroMemory(&ofn, sizeof(OPENFILENAMEA));
 	ZeroMemory(szFile, 260);
-	if (defaultname)
-		std::strncpy(szFile, defaultname, 259);
+	if (defaultname) strncpy(szFile, defaultname, 259);
 
 	ofn.lStructSize = sizeof(OPENFILENAMEA);
 	ofn.hwndOwner = GetActiveWindow();
@@ -185,7 +183,7 @@ char* savedialog(char* filter, char* defaultname) {
 	char* szFile = new char[260];
 	ZeroMemory(&ofn, sizeof(OPENFILENAMEA));
 	ZeroMemory(szFile, 260);
-	if (defaultname) std::strncpy(szFile, defaultname, 259);
+	if (defaultname) strncpy(szFile, defaultname, 259);
 
 	ofn.lStructSize = sizeof(OPENFILENAMEA);
 	ofn.hwndOwner = GetActiveWindow();
@@ -201,7 +199,7 @@ char* savedialog(char* filter, char* defaultname) {
 	ofn.lpstrDefExt = "";
 
 	mousebuttonbug(true);
-	if (GetSaveFileNameA(&ofn) && std::strlen(szFile))
+	if (GetSaveFileNameA(&ofn) && strlen(szFile))
 		return szFile;
 
 	delete[] szFile;
@@ -226,11 +224,11 @@ char* inputbox() {
 #else  // non-Windows stubs
 
 void osinit(char* filename) {
-	path = new char[std::strlen(filename) + 1];
-	std::strcpy(path, filename);
+	path = new char[strlen(filename) + 1];
+	strcpy(path, filename);
 	char* tmp = nullptr;
 	char* tmp2 = path;
-	while ((tmp = std::strchr(tmp2, '/')) || (tmp = std::strchr(tmp2, '\\')))
+	while ((tmp = strchr(tmp2, '/')) || (tmp = strchr(tmp2, '\\')))
 		tmp2 = tmp + 1;
 	*tmp2 = '\0';
 }
@@ -239,7 +237,7 @@ void sysmessage(SDL_SysWMmsg* msg) {}
 
 void ossystem(char* cmd, char* parameters, bool wait, bool hidden) {
 #ifdef COMPILER_SYSTEM
-	std::system(cmd);
+	system(cmd);
 #endif
 }
 

@@ -310,10 +310,10 @@ int parseenc(char* data, int owner, char* filename) {
 }
 
 int parsefile(char* filename, int owner) {
-    const std::size_t flen = strlen(filename);
+    const size_t flen = strlen(filename);
 
     auto endsWith = [&](const char* ext) {
-        const std::size_t elen = strlen(ext);
+        const size_t elen = strlen(ext);
         return (flen >= elen) && !strcmp(filename + flen - elen, ext);
     };
 
@@ -340,8 +340,7 @@ int parsefile(char* filename, int owner) {
     if (data[0] == '<') {
         if (strstr(data, "<bs2>") && strstr(data, "</bs2>")) {
             {
-                std::ofstream savefile(checkfilename("xml2bs2.xml"),
-                    std::ios::out | std::ios::ate | std::ios::binary);
+                std::ofstream savefile(checkfilename("xml2bs2.xml"), std::ios::out | std::ios::ate | std::ios::binary);
                 savefile.write(data, strlen(data));
             }
             delete[] data;
@@ -393,9 +392,7 @@ int parsefile(char* filename, int owner) {
             secretcode--;
         } else if (endsWith(".bs2e") || endsWith(".BS2E")) {
             parseenc(data, owner, filename);
-        } else {
-            parsechar(data, owner, filename);
-        }
+        } else parsechar(data, owner, filename);
     }
 
     delete[] data;
@@ -434,8 +431,7 @@ int parseline(char* text, int linenum, int owner, char* filename) {
 	if (debugparser->value) {
 		tmp = new char[strlen(text) + 512];
 		sprintf(tmp, "parsing line: messageid: %i, filename: %s, line: %i, line: %s", owner, filename, linenum, text);
-		if (!secretcode)
-			std::cout << tmp << std::endl;
+		if (!secretcode) std::cout << tmp << std::endl;
 		delete (tmp);
 	}
 	if (!filename) filename = "";
@@ -451,8 +447,7 @@ int parseline(char* text, int linenum, int owner, char* filename) {
 					tmp = new char[strlen(text) + 512];
 					char* string = (actionstack.top())->toString();
 					sprintf(tmp, "parsed action: messageid: %i, filename: %s, line: %i, action: %s", owner, filename, linenum, string);
-					if (!secretcode)
-						std::cout << tmp << std::endl;
+					if (!secretcode) std::cout << tmp << std::endl;
 					delete (string);
 					delete (tmp);
 				}
@@ -484,8 +479,7 @@ int parseline(char* text, int linenum, int owner, char* filename) {
 				tmp = new char[strlen(text) + 512];
 				char* string = action->toString();
 				sprintf(tmp, "parsed action: messageid: %i, filename: %s, line: %i, action: %s", owner, filename, linenum, string);
-				if (!secretcode)
-					std::cout << tmp << std::endl;
+				if (!secretcode) std::cout << tmp << std::endl;
 				delete (string);
 				delete (tmp);
 			}
