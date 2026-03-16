@@ -2,6 +2,7 @@
 #include "config.h"
 #include <list>
 #include <fstream>
+#include <vector>
 #include <stack>
 #include "win.h"
 #include "abf.h"
@@ -34,10 +35,8 @@ void removeall(char* c, char* search, char fill = ' ') {
 	char* end = c + strlen(c) - len;
 	while (pos = strstr(c, search)) {
 		char* t;
-		for (t = pos; t < end; t++)
-			*t = *(t + len);
-		for (int i = 0; i < len; i++)
-			*(t++) = fill;
+		for (t = pos; t < end; t++) *t = *(t + len);
+		for (int i = 0; i < len; i++) *(t++) = fill;
 	}
 }
 
@@ -74,7 +73,6 @@ static void unzipInPlace(char* text) {
 	const size_t len = strlen(text);
 	if (len < 4 || strcmp(text + len - 4, ".zip") != 0) return;
 
-	// Build a copy so we can extract the directory portion.
 	std::string path(text, len);
 	size_t lastSep = path.find_last_of("/\\");
 	std::string dir = (lastSep != std::string::npos) ? path.substr(0, lastSep) : ".";
@@ -84,44 +82,35 @@ static void unzipInPlace(char* text) {
 	ossystem(cmd, nullptr, true, true);
 	mousebuttonbug(true);
 
-	text[len - 4] = '\0'; // Strip the ".zip" extension from the caller's buffer in-place.
+	text[len - 4] = '\0';
 }
 
 bool checkfile(char* text, bool doexit) {
 	if (!text) return false;
 
-	// ---- Path traversal guard ----
 	if (strstr(text, "..")) {
 		if (doexit) exit(1);
 		return false;
 	}
 
-	// ---- Blocked substrings ----
 	for (int i = 0; BLOCKED_SUBSTRINGS[i]; ++i)
 		if (strstr(text, BLOCKED_SUBSTRINGS[i]))
 			exit(1);
 
-	// ---- Blocked exact names ----
 	for (int i = 0; BLOCKED_EXACT[i]; ++i)
 		if (strcmp(text, BLOCKED_EXACT[i]) == 0)
 			exit(1);
 
-	// ---- Decode percent-encoded characters ----
 	for (int i = 0; PERCENT_ENCODINGS[i].token; ++i)
 	    replaceall(text, const_cast<char*>(PERCENT_ENCODINGS[i].token), PERCENT_ENCODINGS[i].value, 0);
 
-	// ---- Custom protocol: bs2mod:// → http:// ----
 	if (strncmp(text, "bs2mod://", 9) == 0) {
-		// Replace "bs2mod://" (9 chars) with "http://" (7 chars).
-		// Shift the rest of the string left by 2.
 		const size_t len = strlen(text);
-		memmove(text + 7, text + 9, len - 9 + 1);   // +1 for null terminator
+		memmove(text + 7, text + 9, len - 9 + 1);
 		memcpy(text, "http://", 7);
 
 		// Confirm with the user before proceeding.
-        std::string msg = std::string("Would you like to run this mod?\n")
-                        + text
-                        + "\nIt could contain viruses.";
+        std::string msg = std::string("Would you like to run this mod?\n") + text + "\nIt could contain viruses.";
         std::vector<char> msgBuf(msg.begin(), msg.end());
         msgBuf.push_back('\0');
         if (!yesnobox(msgBuf.data(), "Download and run mod?"))  return false;
