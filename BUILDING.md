@@ -9,7 +9,7 @@ Windows builds use **MSYS2** with the **CLANG64** environment, only CLANG64 is s
 ### 1. Installing MSYS2
 
 Download the latest version of [MSYS2](https://www.msys2.org) and install.
-After installation, a terminal opens and follow the command to update the enviroment:
+After installation, a terminal opens and follow the command to update the environment:
 ```bash
 pacman -Syu
 ```
@@ -27,7 +27,7 @@ Navigate somewhere you want to clone source code to and clone the source repo us
 Before using Git, Download the latest version of [Git](https://git-scm.com/install/) and install.
 ```bash
 git clone https://github.com/system32unknown/BS2Plus
-cd BS2CE
+cd BS2Plus
 ```
 
 Then generate the build files using Cmake and start the compile.
@@ -99,7 +99,7 @@ Navigate somewhere you want to clone source code to and clone the source repo us
 Before using Git, Download the latest version of (Git)[https://git-scm.com/install/] and install.
 ```bash
 git clone https://github.com/system32unknown/BS2Plus
-cd BS2CE
+cd BS2Plus
 ```
 
 Then generate the build files using Cmake and start the compile.
