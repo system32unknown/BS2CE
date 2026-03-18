@@ -50,17 +50,14 @@ char* messageReplace(char* text) {
 }
 
 void deleteparams(Varint** v) {
-    if (v == nullptr) return;
-    for (int i = 0; i < 10; i++)
-        delete v[i];
-    delete[] v;
+	if (v == nullptr) return;
+	for (int i = 0; i < 10; i++)
+		delete v[i];
+	delete[] v;
 }
 
-void Action::exec() {
-}
-
-Action::~Action() {
-}
+void Action::exec() {}
+Action::~Action() {}
 
 char* Action::toString() {
 	char* tmp = new char[1024];
@@ -69,39 +66,35 @@ char* Action::toString() {
 }
 
 Trigger* findTrigger(char* triggername, int owner) {
-	if (triggername == 0)
-		return 0;
+	if (!triggername) return nullptr;
+
 	char* name = messageReplace(triggername);
+
 	if (name[0] == '<') {
-		name[strlen(name) - 1] = 0;
+		name[strlen(name) - 1] = '\0';
 		Token tokens(name + 1);
 		Action* action = parseaction(&tokens, owner);
-		if (action == NULL)
-			return NULL;
-		else {
-			Trigger* t = new Trigger;
-			t->execcount = 0;
-			t->deleted = 0;
-			t->name = "NO NAME";
-			t->actions.push_back(action);
-			t->actioncount = t->actions.size();
-			return t;
-		}
+		if (!action) return nullptr;
+		Trigger* t = new Trigger;
+		t->execcount = 0;
+		t->deleted = 0;
+		t->name = "NO NAME";
+		t->actions.push_back(action);
+		t->actioncount = t->actions.size();
+		return t;
 	}
-	std::list<Trigger*>::iterator it = triggers.begin();
-	while (it != triggers.end()) {
-		if (!strcmp((*it)->name, name))
-			return *it;
-		it++;
-	}
-	Trigger* trigger = new Trigger;
-	trigger->deleted = 0;
-	trigger->execcount = 0;
-	trigger->name = new char[strlen(name) + 1];
-	trigger->actioncount = 0;
-	strcpy(trigger->name, name);
-	triggers.push_back(trigger);
-	return trigger;
+
+	for (auto* t : triggers)
+		if (!strcmp(t->name, name)) return t;
+
+	Trigger* t = new Trigger;
+	t->deleted = 0;
+	t->execcount = 0;
+	t->actioncount = 0;
+	t->name = new char[strlen(name) + 1];
+	strcpy(t->name, name);
+	triggers.push_back(t);
+	return t;
 }
 
 void addAction(char* trigger, Action* action, int owner) {
@@ -113,57 +106,51 @@ void addAction(char* trigger, Action* action, int owner) {
 int Trigger::exec() {
 	execcount++;
 	if (!actioncount) return 0;
+
 	static Var* debugtrigger = (Var*)setVar("DEBUGTRIGGER", 0);
 	static Var* debugactions = (Var*)setVar("DEBUGACTION", 0);
+
 	setreturn = false;
 	rec++;
+
 	if (debugtrigger->value) {
 		static char tmp[512];
 		if (name)
-			sprintf(tmp, "executing trigger: %s actions: %i", name, actions.size());
-		else
-			sprintf(tmp, "executing trigger: noname, actions: %i", actions.size());
-		if (rec < 0)
-			rec = 0;
-		for (int i = 0; i < rec; i++)
-			std::cout << "  ";
+			snprintf(tmp, sizeof(tmp), "executing trigger: %s actions: %zu", name, actions.size());
+		else snprintf(tmp, sizeof(tmp), "executing trigger: noname, actions: %zu", actions.size());
+		if (rec < 0) rec = 0;
+		for (int i = 0; i < rec; i++) std::cout << "  ";
 		std::cout << tmp << std::endl;
 	}
+
 	if (actioncount == 1) {
 		if (debugactions->value) {
 			char* t = (*actions.begin())->toString();
 			char tmp[512];
-			sprintf(tmp, "executing action: messagid: %i action: ", (*actions.begin())->owner);
-			static int i;
-			for (i = 0; i <= rec; i++)
-				std::cout << "  ";
+			snprintf(tmp, sizeof(tmp), "executing action: messagid: %i action: ", (*actions.begin())->owner);
+			for (int i = 0; i <= rec; i++) std::cout << "  ";
 			std::cout << tmp << t << std::endl;
-			delete (t);
+			delete[] t;
 		}
 		(*actions.begin())->exec();
 		rec--;
-
-		if (setreturn)
-			return globalreturn;
-		else
-			return 0;
+		return setreturn ? globalreturn : 0;
 	}
-	long thisexecounter = ++execcounter;
-	std::list<Action*>::iterator it = actions.begin();
-	while ((it != actions.end()) && (thisexecounter > deleted)) {
+
+	const long thisexecounter = ++execcounter;
+	auto it = actions.begin();
+	while (it != actions.end() && thisexecounter > deleted) {
 		if (debugactions->value) {
 			char* t = (*it)->toString();
 			char tmp[512];
-			sprintf(tmp, "executing action: messagid: %i action: ", (*it)->owner);
-			static int i;
-			for (i = 0; i <= rec; i++)
-				std::cout << "  ";
+			snprintf(tmp, sizeof(tmp), "executing action: messagid: %i action: ", (*it)->owner);
+			for (int i = 0; i <= rec; i++) std::cout << "  ";
 			std::cout << tmp << t << std::endl;
-			delete (t);
+			delete[] t;
 		}
 		(*it)->exec();
 		if (setreturn) return globalreturn;
-		if (actions.size() == 0) {
+		if (actions.empty()) {
 			rec--;
 			return 0;
 		}
@@ -179,8 +166,9 @@ void ActionReturn::exec() {
 }
 
 char* ActionReturn::toString() {
-	char* tmp = new char[1024 + strlen(var->text)];
-	sprintf(tmp, "RETURN %s", var->text);
+	const size_t len = 1024 + strlen(var->text);
+	char* tmp = new char[len];
+	snprintf(tmp, len, "RETURN %s", var->text);
 	return tmp;
 }
 
@@ -191,7 +179,7 @@ ActionReturn::~ActionReturn() {
 void ActionExit::exec() {
 	if (threadrunning) {
 		threadrunning = false;
-		while (threadrunning == false);
+		while (!threadrunning);
 	}
 	exit(0);
 }
@@ -210,7 +198,7 @@ void ActionRestart::exec() {
 #endif
 	if (threadrunning) {
 		threadrunning = false;
-		while (threadrunning == false);
+		while (!threadrunning);
 	}
 	exit(0);
 }
@@ -276,124 +264,130 @@ void ActionInc::exec() {
 }
 
 char* ActionInc::toString() {
-	char* tmp = new char[1024 + strlen(var)];
-	sprintf(tmp, "INC \"%s\"", var);
+	const size_t len = 1024 + strlen(var);
+	char* tmp = new char[len];
+	snprintf(tmp, len, "INC \"%s\"", var);
 	return tmp;
 }
 
 ActionInc::~ActionInc() {
-	delete (var);
-	delete (value);
+	delete[] var;
+	delete value;
 }
 
 void ActionCount::exec() {
 	SDL_Surface* screen = getRealSandSurface();
-	Uint16* t;
-	int e = element->val();
+	const int e = element->val();
 	int i = 0;
+
 	if (x) {
-		int starty = y->val();
-		int startx = x->val();
-		int endy = starty + h->val();
-		int endx = startx + w->val();
-		for (int y = starty; y < endy; y++) {
-			t = ((Uint16*)screen->pixels + (y)*screen->pitch / 2);
-			for (int x = startx; x < endx; x++)
-				if (*(t + x) == e)
-					i++;
+		const int starty = y->val();
+		const int startx = x->val();
+		const int endy = starty + h->val();
+		const int endx = startx + w->val();
+		for (int row = starty; row < endy; row++) {
+			const Uint16* row_ptr = static_cast<Uint16*>(screen->pixels) + row * screen->pitch / 2;
+			for (int col = startx; col < endx; col++)
+				if (*(row_ptr + col) == e) i++;
 		}
 	} else {
-		Uint16* end = (Uint16*)screen->pixels + screen->pitch / 2 * (screen->h - 2) + (screen->w - 1) - 1;
-		t = (Uint16*)screen->pixels - 1 + screen->pitch / 2;
-		while (end != ++t)
-			if (*t == e)
-				i++;
+		const Uint16* end = static_cast<Uint16*>(screen->pixels) + screen->pitch / 2 * (screen->h - 2) + (screen->w - 1) - 1;
+		const Uint16* t = static_cast<Uint16*>(screen->pixels) - 1 + screen->pitch / 2;
+		while (end != ++t) if (*t == e) i++;
 	}
 	setVar(var, i);
 }
 
 char* ActionCount::toString() {
-	char* tmp = new char[1024 + strlen(var) + strlen(element->text)];
-	sprintf(tmp, "COUNT \"%s\" %s", var, element->text);
+	const size_t len = 1024 + strlen(var) + strlen(element->text);
+	char* tmp = new char[len];
+	snprintf(tmp, len, "COUNT \"%s\" %s", var, element->text);
 	return tmp;
 }
 
 ActionCount::~ActionCount() {
-	delete (var);
-	delete (element);
-	delete (x);
-	delete (y);
-	delete (w);
-	delete (h);
+	delete[] var;
+	delete element;
+	delete x;
+	delete y;
+	delete w;
+	delete h;
 }
 
 void ActionClosest::exec() {
-	static Var* varx = (Var*)setVar("CLOSESTX", 0);
-	static Var* vary = (Var*)setVar("CLOSESTY", 0);
-	static Var* vard = (Var*)setVar("CLOSESTD", 0);
+	static Var* varx = reinterpret_cast<Var*>(setVar("CLOSESTX", 0));
+	static Var* vary = reinterpret_cast<Var*>(setVar("CLOSESTY", 0));
+	static Var* vard = reinterpret_cast<Var*>(setVar("CLOSESTD", 0));
+
 	SDL_Surface* screen = getRealSandSurface();
-	int ne = e->val();
+	const int ne = e->val();
+
 	if (!used[ne]) {
 		varx->value = -1;
 		vary->value = -1;
-		vard->value = (int)sqrt((float)1000000000);
+		vard->value = static_cast<int>(sqrt(1000000000.0));
 		return;
 	}
-	int w = screen->w - 2;
-	int h = screen->h - 2;
-	int nx = x->val();
-	int ny = y->val();
+
+	const int w = screen->w - 2;
+	const int h = screen->h - 2;
+	const int nx = x->val();
+	const int ny = y->val();
 	int nd = d->val();
-	int d = 1000000000;
-	for (int i = 0; i < 5; i++)
-		if ((lx[i] < (unsigned int)w) && (ly[i] < (unsigned int)h) && (*(((Uint16*)screen->pixels + (ly[i]) * screen->pitch / 2) + lx[i]) == ne)) {
-			int tmp = (int)sqrt((nx - lx[i]) * (nx - lx[i]) + (ny - ly[i]) * (ny - ly[i])) + 2;
-			if (tmp < nd)
-				nd = tmp;
+	int dist = 1000000000;
+
+	for (int i = 0; i < 5; i++) {
+		if (lx[i] < static_cast<unsigned int>(w) &&
+			ly[i] < static_cast<unsigned int>(h) &&
+			*(static_cast<Uint16*>(screen->pixels) + ly[i] * screen->pitch / 2 + lx[i]) == ne) {
+			const int tmp = static_cast<int>(sqrt(static_cast<double>((nx - lx[i]) * (nx - lx[i]) + (ny - ly[i]) * (ny - ly[i])))) + 2;
+			if (tmp < nd) nd = tmp;
 		}
+	}
 
 	int lastx = -1;
 	int lasty = -1;
-	Uint16* t;
-	int d2 = 32;
-	if (d2 > nd)
-		d2 = nd;
-	while ((d2 <= nd) && (d2 <= (int)(sqrt((float)d) + d2)) && (d != 999999999)) {
+	int d2 = (32 > nd) ? nd : 32;
+
+	while (d2 <= nd &&
+		d2 <= static_cast<int>(sqrt(static_cast<double>(dist))) + d2 &&
+		dist != 999999999) {
 		int startx = nx - d2;
 		int endx = nx + d2;
 		int starty = ny - d2;
 		int endy = ny + d2;
-		if ((startx < 1) && (endx > w) && (starty < 1) && (endy > h))
-			d = 999999999;
-		if (startx < 1)
-			startx = 1;
-		if (endx > w)
-			endx = w;
-		if (starty < 1)
-			starty = 1;
-		if (endy > h)
-			endy = h;
-		for (int y = starty; y <= endy; y++) {
-			t = ((Uint16*)screen->pixels + (y)*screen->pitch / 2);
-			for (int x = startx; x <= endx; x++)
-				if (*(t + x) == ne) {
-					if (((x - nx) * (x - nx) + (y - ny) * (y - ny)) < d) {
-						d = ((x - nx) * (x - nx) + (y - ny) * (y - ny));
-						lastx = x;
-						lasty = y;
+
+		if (startx < 1 && endx > w && starty < 1 && endy > h) {
+			dist = 999999999;
+		} else {
+			if (startx < 1) startx = 1;
+			if (endx > w) endx = w;
+			if (starty < 1) starty = 1;
+			if (endy > h) endy = h;
+
+			for (int row = starty; row <= endy; row++) {
+				const Uint16* rowp = static_cast<Uint16*>(screen->pixels) + row * screen->pitch / 2;
+				for (int col = startx; col <= endx; col++) {
+					if (*(rowp + col) == ne) {
+						const int dsq = (col - nx) * (col - nx) + (row - ny) * (row - ny);
+						if (dsq < dist) {
+							dist = dsq;
+							lastx = col;
+							lasty = row;
+						}
 					}
 				}
+			}
 		}
-		if (d2 == nd)
-			break;
-		d2 *= 2;
-		if (d2 > nd)
-			d2 = nd;
+
+		if (d2 == nd) break;
+		d2 = (d2 * 2 > nd) ? nd : d2 * 2;
 	}
+
 	lx[li % 5] = varx->value = lastx;
 	ly[li % 5] = vary->value = lasty;
 	li++;
-	vard->value = (int)sqrt((float)d);
+	vard->value = static_cast<int>(sqrt(static_cast<double>(dist)));
 }
 
 char* ActionClosest::toString() {
@@ -515,11 +509,9 @@ void ActionFor::exec() {
 	int s = step->val();
 	if (function == FOR_TO)
 		for (v->value = fromvalue->val(); v->value <= end; (v->value) += s) {
-			if (params)
-				addparams(calcparams(params));
+			if (params) addparams(calcparams(params));
 			trigger->exec();
-			if (params)
-				removeparams();
+			if (params) removeparams();
 		} else
 			for (v->value = fromvalue->val(); v->value >= end; (v->value) -= s) {
 				if (params) addparams(calcparams(params));
@@ -592,7 +584,7 @@ void ActionSystem::exec() {
 
 char* ActionSystem::toString() {
 	char* tmp = new char[1024 + strlen(cmd)];
-	sprintf(tmp, "SYSTEM \"%s\"", cmd);
+	snprintf(tmp, sizeof(tmp), "SYSTEM \"%s\"", cmd);
 	return tmp;
 }
 
@@ -727,7 +719,7 @@ void ActionElementDie::exec() {
 
 char* ActionElementDie::toString() {
 	char* tmp = new char[1024 + strlen(elementname) + strlen(dieto) + strlen(rate->text)];
-	sprintf(tmp, "ELEMENT \"%s\" DIE \"%s\" %s", elementname, dieto, rate->text);
+	snprintf(tmp, sizeof(tmp), "ELEMENT \"%s\" DIE \"%s\" %s", elementname, dieto, rate->text);
 	return tmp;
 }
 
@@ -738,182 +730,163 @@ ActionElementDie::~ActionElementDie() {
 }
 
 void ActionInteraction::exec() {
-	Uint16 ex;
-	Group* g;
-	Group* g2 = 0;
+	Uint16 ex = 0;
+	Group* g = nullptr;
+	Group* g2 = nullptr;
 
-	std::list<Uint16> e1s;
-	std::list<Uint16> e2s;
-	std::list<Uint16> e3s;
-	std::list<Uint16> e4s;
+	std::list<Uint16> e1s, e2s, e3s, e4s;
 	std::list<int> rs;
-	std::list<int>::iterator it;
-	std::list<int>::iterator it2;
-	std::list<Varint*>::iterator rate;
-	std::list<Trigger*>::iterator trigger;
-	std::list<Uint16>::iterator e1;
-	std::list<Uint16>::iterator e2;
-	std::list<Uint16>::iterator e3;
-	std::list<Uint16>::iterator e4;
-	std::list<char*>::iterator i;
-	std::list<char*>::iterator i2;
 
-	for (i = elements1.begin(); i != elements1.end(); i++)
-		if (strstr(*i, "GROUP:") == *i) {
-			g = getGroup(findGroup(*i + 6, false, -1));
-			for (it = g->elements.begin(); it != g->elements.end(); it++)
-				e1s.push_front(*it);
-		} else e1s.push_back(findElement(*i, true));
+	auto isGroup = [](const char* s) {
+		return s && strstr(s, "GROUP:") == s;
+		};
 
-		for (i = elements2.begin(); i != elements2.end(); i++)
-			if (strstr(*i, "GROUP:") == *i) {
-				g = getGroup(findGroup(*i + 6, false, -1));
-				for (it = g->elements.begin(); it != g->elements.end(); it++)
-					e2s.push_front(*it);
-			} else e2s.push_back(findElement(*i, true));
-			i2 = toothers.begin();
-			for (i = toselfs.begin(); i != toselfs.end(); i++) {
-				if (*i && (strstr(*i, "GROUP:") == *i)) {
-					g = getGroup(findGroup(*i + 6, false, -1));
-					for (it = g->elements.begin(); it != g->elements.end(); it++)
-						if (*i2 && (strstr(*i2, "GROUP:") == *i2)) {
-							if (g2 == 0)
-								g2 = getGroup(findGroup(*i2 + 6, false, -1));
-							for (it2 = g2->elements.begin(); it2 != g2->elements.end(); it2++) {
-								e3s.push_back(*it);
-								e4s.push_back(*it2);
-							}
-						} else {
-							e3s.push_back(*it);
-							e4s.push_back(findElement(*i2, true));
-						}
-				} else if (*i2 && (strstr(*i2, "GROUP:") == *i2)) {
-					g = getGroup(findGroup(*i2 + 6, false, -1));
-					for (it2 = g->elements.begin(); it2 != g->elements.end(); it2++) {
-						e3s.push_back(findElement(*i));
-						e4s.push_back(*it2);
+	for (auto* s : elements1) {
+		if (isGroup(s)) {
+			g = getGroup(findGroup(s + 6, false, -1));
+			for (auto v : g->elements) e1s.push_front(static_cast<Uint16>(v));
+		} else e1s.push_back(findElement(s, true));
+	}
+
+	for (auto* s : elements2) {
+		if (isGroup(s)) {
+			g = getGroup(findGroup(s + 6, false, -1));
+			for (auto v : g->elements) e2s.push_front(static_cast<Uint16>(v));
+		} else e2s.push_back(findElement(s, true));
+	}
+
+	auto i2 = toothers.begin();
+	for (auto* self : toselfs) {
+		if (isGroup(self)) {
+			g = getGroup(findGroup(self + 6, false, -1));
+			for (auto ev : g->elements) {
+				if (isGroup(*i2)) {
+					if (!g2) g2 = getGroup(findGroup(*i2 + 6, false, -1));
+					for (auto ev2 : g2->elements) {
+						e3s.push_back(static_cast<Uint16>(ev));
+						e4s.push_back(static_cast<Uint16>(ev2));
 					}
 				} else {
-					e3s.push_back(findElement(*i, true));
+					e3s.push_back(static_cast<Uint16>(ev));
 					e4s.push_back(findElement(*i2, true));
 				}
-				i2++;
-				e3s.push_back(32767);
-				e4s.push_back(32767);
 			}
+		} else if (isGroup(*i2)) {
+			g = getGroup(findGroup(*i2 + 6, false, -1));
+			for (auto ev2 : g->elements) {
+				e3s.push_back(findElement(self));
+				e4s.push_back(static_cast<Uint16>(ev2));
+			}
+		} else {
+			e3s.push_back(findElement(self, true));
+			e4s.push_back(findElement(*i2, true));
+		}
+		++i2;
+		e3s.push_back(32767);
+		e4s.push_back(32767);
+	}
 
-			int restrate = 32768;
-			for (rate = rates.begin(); rate != rates.end(); rate++) {
-				int tmp = (*rate)->val();
-				int tmp2;
-				if (restrate > 0) tmp2 = tmp * 32768 / restrate;
-				else tmp2 = 0;
-				if (tmp2 > 32768) tmp2 = 32768;
-				rs.push_back(tmp2);
-				restrate -= tmp;
-			}
-			if (except)
-				ex = findElement(except, true);
-			else
-				ex = 1;
+	int restrate = 32768;
+	for (auto* r : rates) {
+		const int tmp = r->val();
+		const int tmp2 = (restrate > 0) ? std::min(tmp * 32768 / restrate, 32768) : 0;
+		rs.push_back(tmp2);
+		restrate -= tmp;
+	}
 
-			for (e1 = e1s.begin(); e1 != e1s.end(); e1++) {
-				for (e2 = e2s.begin(); e2 != e2s.end(); e2++) {
-					it = rs.begin();
-					e4 = e4s.begin();
-					for (e3 = e3s.begin(); e3 != e3s.end(); e3++) {
-						if ((*e3 == 32767) && (*e4 == 32767))
-							it++;
-						else addInteraction(*e1, *e2, *e3, *e4, *it, ex, 0, at->val());
-						e4++;
-					}
-					for (trigger = triggers.begin(); trigger != triggers.end(); trigger++) {
-						addInteraction(*e1, *e2, 0, 0, *it, ex, *trigger, at->val());
-						it++;
-					}
-				}
+	ex = except ? findElement(except, true) : 1;
+
+	for (const auto e1 : e1s) {
+		for (const auto e2 : e2s) {
+			auto it = rs.begin();
+			auto e4 = e4s.begin();
+			for (const auto e3 : e3s) {
+				if (e3 == 32767 && *e4 == 32767) ++it;
+				else addInteraction(e1, e2, e3, *e4, *it, ex, nullptr, at->val());
+				++e4;
 			}
+			for (auto* trig : triggers) {
+				addInteraction(e1, e2, 0, 0, *it, ex, trig, at->val());
+				++it;
+			}
+		}
+	}
 }
 
 char* ActionInteraction::toString() {
-	char* tmp;
 	char* e;
 	if (except) {
-		e = new char[128 + strlen(except)];
-		sprintf(e, " \"%s\"", except);
+		const size_t elen = 128 + strlen(except);
+		e = new char[elen];
+		snprintf(e, elen, " \"%s\"", except);
 	} else e = "";
 
 	char* a;
 	if (at->val() != -1) {
-		a = new char[128 + strlen(at->text)];
-		sprintf(a, "AT %s", at->text);
+		const size_t alen = 128 + strlen(at->text);
+		a = new char[alen];
+		snprintf(a, alen, "AT %s", at->text);
 	} else a = "";
 
-	std::list<char*>::iterator i4 = elements1.begin();
-	std::list<char*>::iterator i5 = elements2.begin();
-	if (!triggers.size()) {
-		std::list<char*>::iterator i1 = toselfs.begin();
-		std::list<char*>::iterator i2 = toothers.begin();
-		std::list<Varint*>::iterator i3 = rates.begin();
-		int len = 0;
+	auto i4 = elements1.begin();
+	auto i5 = elements2.begin();
+
+	char* tmp;
+
+	if (triggers.empty()) {
+		auto i1 = toselfs.begin();
+		auto i2 = toothers.begin();
+		auto i3 = rates.begin();
+		size_t len = 0;
 		while (i1 != toselfs.end()) {
-			len += strlen(*i1) + strlen(*i2) + strlen((*i3)->text);
-			i1++;
-			i2++;
-			i3++;
-			len += 10;
+			len += strlen(*i1) + strlen(*i2) + strlen((*i3)->text) + 10;
+			++i1; ++i2; ++i3;
 		}
 
-		tmp = new char[1024 + strlen(*i4) + strlen(*i5) + strlen(at->text) + strlen(e) + len];
-		char* tmp2 = new char[1024 + strlen(*i4) + strlen(*i5) + strlen(at->text) + strlen(e)];
-		sprintf(tmp, "INTERACTION%s \"%s\" \"%s\"", a, *i4, *i5);
+		const size_t tlen = 1024 + strlen(*i4) + strlen(*i5) + strlen(at->text) + strlen(e) + len;
+		tmp = new char[tlen];
+		char* tmp2 = new char[tlen];
+		snprintf(tmp, tlen, "INTERACTION%s \"%s\" \"%s\"", a, *i4, *i5);
 
 		i1 = toselfs.begin();
 		i2 = toothers.begin();
 		i3 = rates.begin();
 		while (i1 != toselfs.end()) {
 			strcpy(tmp2, tmp);
-			sprintf(tmp, "%s \"%s\" \"%s\" %s", tmp2, *i1, *i2, (*i3)->text);
-			i1++;
-			i2++;
-			i3++;
+			snprintf(tmp, tlen, "%s \"%s\" \"%s\" %s", tmp2, *i1, *i2, (*i3)->text);
+			++i1; ++i2; ++i3;
 		}
-
 		strcpy(tmp2, tmp);
-		sprintf(tmp, "%s%s", tmp2, e);
-		delete (tmp2);
+		snprintf(tmp, tlen, "%s%s", tmp2, e);
+		delete[] tmp2;
 	} else {
-		std::list<Trigger*>::iterator i1 = triggers.begin();
-		std::list<Varint*>::iterator i3 = rates.begin();
-		int len = 0;
+		auto i1 = triggers.begin();
+		auto i3 = rates.begin();
+		size_t len = 0;
 		while (i1 != triggers.end()) {
-			len += strlen((*i1)->name) + strlen((*i3)->text);
-			i1++;
-			i3++;
-			len += 10;
+			len += strlen((*i1)->name) + strlen((*i3)->text) + 10;
+			++i1; ++i3;
 		}
 
-		tmp = new char[1024 + strlen(*i4) + strlen(*i5) + strlen(at->text) + strlen(e) + len];
-		char* tmp2 = new char[1024 + strlen(*i4) + strlen(*i5) + strlen(at->text) + strlen(e)];
-		sprintf(tmp, "INTERACTIONTRIGGER%s \"%s\" \"%s\"", a, *i4, *i5);
+		const size_t tlen = 1024 + strlen(*i4) + strlen(*i5) + strlen(at->text) + strlen(e) + len;
+		tmp = new char[tlen];
+		char* tmp2 = new char[tlen];
+		snprintf(tmp, tlen, "INTERACTIONTRIGGER%s \"%s\" \"%s\"", a, *i4, *i5);
 
 		i1 = triggers.begin();
 		i3 = rates.begin();
 		while (i1 != triggers.end()) {
 			strcpy(tmp2, tmp);
-			sprintf(tmp, "%s \"%s\" %s", tmp2, (*i1)->name, (*i3)->text);
-			i1++;
-			i3++;
+			snprintf(tmp, tlen, "%s \"%s\" %s", tmp2, (*i1)->name, (*i3)->text);
+			++i1; ++i3;
 		}
-
 		strcpy(tmp2, tmp);
-		sprintf(tmp, "%s%s", tmp2, e);
-		delete (tmp2);
+		snprintf(tmp, tlen, "%s%s", tmp2, e);
+		delete[] tmp2;
 	}
-	if (except)
-		delete (e);
-	if (at->val() != -1)
-		delete (a);
+
+	if (except) delete[] e;
+	if (at->val() != -1) delete[] a;
 	return tmp;
 }
 
@@ -1480,32 +1453,45 @@ void ActionWrite::exec() {
 }
 
 char* ActionWrite::toString() {
-	char* tmp = 0;
+	const size_t base = 1024 + strlen(element->text) + strlen(x->text) + strlen(y->text) + strlen(size->text);
+	char* tmp = nullptr;
+
 	switch (type) {
-	case WRITE_TEXT:
-		tmp = new char[1024 + strlen(element->text) + strlen(x->text) + strlen(y->text) + strlen(size->text) + strlen(text)];
-		sprintf(tmp, "WRITE %s %s %s %s TEXT	\"%s\"", element->text, x->text, y->text, size->text, text);
+	case WRITE_TEXT: {
+		const size_t len = base + strlen(text);
+		tmp = new char[len];
+		snprintf(tmp, len, "WRITE %s %s %s %s TEXT \"%s\"", element->text, x->text, y->text, size->text, text);
 		break;
-	case WRITE_NUMBER:
-		tmp = new char[1024 + strlen(element->text) + strlen(x->text) + strlen(y->text) + strlen(size->text) + strlen(v->text)];
-		sprintf(tmp, "WRITE %s %s %s %s NUMBER %s", element->text, x->text, y->text, size->text, v->text);
+	}
+	case WRITE_NUMBER: {
+		const size_t len = base + strlen(v->text);
+		tmp = new char[len];
+		snprintf(tmp, len, "WRITE %s %s %s %s NUMBER %s", element->text, x->text, y->text, size->text, v->text);
 		break;
-	case WRITE_ELEMENT:
-		tmp = new char[1024 + strlen(element->text) + strlen(x->text) + strlen(y->text) + strlen(size->text) + strlen(v->text)];
-		sprintf(tmp, "WRITE %s %s %s %s ELEMENT %s", element->text, x->text, y->text, size->text, v->text);
+	}
+	case WRITE_ELEMENT: {
+		const size_t len = base + strlen(v->text);
+		tmp = new char[len];
+		snprintf(tmp, len, "WRITE %s %s %s %s ELEMENT %s", element->text, x->text, y->text, size->text, v->text);
 		break;
-	case WRITE_GROUP:
-		tmp = new char[1024 + strlen(element->text) + strlen(x->text) + strlen(y->text) + strlen(size->text) + strlen(v->text)];
-		sprintf(tmp, "WRITE %s %s %s %s GROUP %s", element->text, x->text, y->text, size->text, v->text);
+	}
+	case WRITE_GROUP: {
+		const size_t len = base + strlen(v->text);
+		tmp = new char[len];
+		snprintf(tmp, len, "WRITE %s %s %s %s GROUP %s", element->text, x->text, y->text, size->text, v->text);
 		break;
-	case WRITE_MESSAGE:
-		tmp = new char[1024 + strlen(element->text) + strlen(x->text) + strlen(y->text) + strlen(size->text) + strlen(v->text)];
-		sprintf(tmp, "WRITE %s %s %s %s MESSAGE 0", element->text, x->text, y->text, size->text);
+	}
+	case WRITE_MESSAGE: {
+		tmp = new char[base + 2];
+		snprintf(tmp, base + 2, "WRITE %s %s %s %s MESSAGE 0", element->text, x->text, y->text, size->text);
 		break;
-	case WRITE_STRING:
-		tmp = new char[1024 + strlen(element->text) + strlen(x->text) + strlen(y->text) + strlen(size->text) + strlen(v->text)];
-		sprintf(tmp, "WRITE %s %s %s %s STRING %s", element->text, x->text, y->text, size->text, v->text);
+	}
+	case WRITE_STRING: {
+		const size_t len = base + strlen(v->text);
+		tmp = new char[len];
+		snprintf(tmp, len, "WRITE %s %s %s %s STRING %s", element->text, x->text, y->text, size->text, v->text);
 		break;
+	}
 	}
 	return tmp;
 }
@@ -1524,67 +1510,86 @@ void ActionDraw::exec() {
 };
 
 char* ActionDraw::toString() {
-	char* b = "", * p1 = "", * p2 = "", * p3 = "", * p4 = "", * p5 = "", * p6 = "";
-	if (brush == BRUSH_FILLEDCIRCLE)
+	char* b;
+	switch (brush) {
+	case BRUSH_FILLEDCIRCLE:
 		b = "FILLEDCIRCLE";
-	if (brush == BRUSH_CIRCLE)
+		break;
+	case BRUSH_CIRCLE:
 		b = "CIRCLE";
-	if (brush == BRUSH_RECT)
+		break;
+	case BRUSH_RECT:
 		b = "RECT";
-	if (brush == BRUSH_FILLEDRECT)
+		break;
+	case BRUSH_FILLEDRECT:
 		b = "FILLEDRECT";
-	if (brush == BRUSH_LINE)
+		break;
+	case BRUSH_LINE:
 		b = "LINE";
-	if (brush == BRUSH_FILL)
+		break;
+	case BRUSH_FILL:
 		b = "FILL";
-	if (brush == REPLACE_FILLEDCIRCLE)
+		break;
+	case REPLACE_FILLEDCIRCLE:
 		b = "REPLACEFILLEDCIRCLE";
-	if (brush == REPLACE_LINE)
+		break;
+	case REPLACE_LINE:
 		b = "REPLACELINE";
-	if (brush == BRUSH_FILLEDCIRCLE)
-		b = "FILLEDCIRCLE";
-	if (brush == COPY_RECT)
+		break;
+	case COPY_RECT:
 		b = "COPYRECT";
-	if (brush == ROTATE_RECT)
-		b = "ROTATE";
-	if (brush == BRUSH_POINT)
-		b = "POINT";
-	if (brush == BRUSH_RADNOMFILLEDCIRCLE)
-		b = "RANDOMFILLEDCIRCLE";
-	if (brush == COPY_STAMP)
-		b = "COPYSTAMP";
-	if (brush == PASTE_STAMP)
-		b = "PASTESTAMP";
-	if (brush == BRUSH_SWAPPOINTS)
-		b = "SWAPPOINTS";
-	if (brush == BRUSH_FILLEDELLIPSE)
-		b = "FILLEDELLIPSE";
-	if (brush == BRUSH_ELLIPSE)
-		b = "ELLIPSE";
-	if (brush == REPLACE_FILLEDELLIPSE)
-		b = "REPLACEFILLEDELLIPSE";
-	if (brush == BRUSH_RANDOMFILLEDELLIPSE)
-		b = "RANDOMFILLEDELLIPSE";
-	if (brush == BRUSH_POINTS)
-		b = "FILLEDCIRCLE";
-	if (brush == BRUSH_OBJECT)
-		b = "OBJECT";
-	if (brush == ROTATE_RECT)
+		break;
+	case ROTATE_RECT:
 		b = "ROTATERECT";
-	if (drawx && drawx->text)
-		p1 = drawx->text;
-	if (drawy && drawy->text)
-		p2 = drawy->text;
-	if (dx && dx->text)
-		p3 = dx->text;
-	if (dy && dy->text)
-		p4 = dy->text;
-	if (a1 && a1->text)
-		p5 = a1->text;
-	if (a2 && a2->text)
-		p6 = a2->text;
-	char* tmp = new char[1024 + strlen(element->text) + strlen(p1) + strlen(p1) + strlen(p2) + strlen(p3) + strlen(p4) + strlen(p5) + strlen(p6)];
-	sprintf(tmp, "DRAW %s %s %s %s %s %s %s %s", element->text, b, p1, p2, p3, p4, p5, p6);
+		break;
+	case BRUSH_POINT:
+		b = "POINT";
+		break;
+	case BRUSH_RADNOMFILLEDCIRCLE:
+		b = "RANDOMFILLEDCIRCLE";
+		break;
+	case COPY_STAMP:
+		b = "COPYSTAMP";
+		break;
+	case PASTE_STAMP:
+		b = "PASTESTAMP";
+		break;
+	case BRUSH_SWAPPOINTS:
+		b = "SWAPPOINTS";
+		break;
+	case BRUSH_FILLEDELLIPSE:
+		b = "FILLEDELLIPSE";
+		break;
+	case BRUSH_ELLIPSE:
+		b = "ELLIPSE";
+		break;
+	case REPLACE_FILLEDELLIPSE:
+		b = "REPLACEFILLEDELLIPSE";
+		break;
+	case BRUSH_RANDOMFILLEDELLIPSE:
+		b = "RANDOMFILLEDELLIPSE";
+		break;
+	case BRUSH_POINTS:
+		b = "FILLEDCIRCLE";
+		break;
+	case BRUSH_OBJECT:
+		b = "OBJECT";
+		break;
+	default:
+		b = "";
+		break;
+	}
+
+	const char* p1 = (drawx && drawx->text) ? drawx->text : "";
+	const char* p2 = (drawy && drawy->text) ? drawy->text : "";
+	const char* p3 = (dx && dx->text) ? dx->text : "";
+	const char* p4 = (dy && dy->text) ? dy->text : "";
+	const char* p5 = (a1 && a1->text) ? a1->text : "";
+	const char* p6 = (a2 && a2->text) ? a2->text : "";
+
+	const size_t len = 1024 + strlen(element->text) + strlen(b) + strlen(p1) + strlen(p2) + strlen(p3) + strlen(p4) + strlen(p5) + strlen(p6);
+	char* tmp = new char[len];
+	snprintf(tmp, len, "DRAW %s %s %s %s %s %s %s %s", element->text, b, p1, p2, p3, p4, p5, p6);
 	return tmp;
 }
 
@@ -1635,26 +1640,16 @@ ActionDrawPoints::~ActionDrawPoints() {
 }
 
 void ActionDrawObject::exec() {
-	std::list<char*>::iterator dit = data.begin();
-	int startx = xoffset->val();
-	int starty = yoffset->val();
+	const int startx = xoffset->val();
+	const int starty = yoffset->val();
+
 	Uint16 e[256];
 	for (int i = 0; i < 256; i++)
-		if (elements[i])
-			e[i] = elements[i]->val();
-		else
-			e[i] = 1;
-	int y = 0;
-	int sx = 1;
-	if (sizex)
-		sx = sizex->val();
-	int sy = 1;
-	if (sizey)
-		sy = sizey->val();
-	int tmp;
-	bool scale = false;
-	if ((sx == 1) && (sy == 1))
-		scale = true;
+		e[i] = elements[i] ? static_cast<Uint16>(elements[i]->val()) : 1;
+
+	int sx = sizex ? sizex->val() : 1;
+	int sy = sizey ? sizey->val() : 1;
+
 	int xstep = 1, ystep = 1;
 	if (sx < 0) {
 		xstep = -sx;
@@ -1664,59 +1659,71 @@ void ActionDrawObject::exec() {
 		ystep = -sy;
 		sy = 1;
 	}
-	while (dit != data.end()) {
-		char* c = *dit;
-		int l = strlen(c);
+
+	const bool scale = (sx == 1) && (sy == 1);
+
+	int y = 0;
+	for (auto dit = data.begin(); dit != data.end(); ) {
+		const char* c = *dit;
+		const int l = static_cast<int>(strlen(c));
+
 		if (scale) {
-			for (int i = 0; i < l; i++)
-				if (e[(int)*(c + i)] != 1)
-					sanddraw(e[(int)*(c + i)], BRUSH_POINT, startx + i, starty + y, 0, 0, 0, 0);
+			for (int i = 0; i < l; i++) {
+				const Uint16 ei = e[static_cast<unsigned char>(c[i])];
+				if (ei != 1) sanddraw(ei, BRUSH_POINT, startx + i, starty + y, 0, 0, 0, 0);
+			}
 		} else {
-			for (int y2 = y; y2 < y + sy; y2 += 1)
-				for (int i = 0; i < l; i += xstep)
-					if (e[(int)*(c + i)] != 1)
-						for (int x2 = i * sx / xstep; x2 < i * sx / xstep + sx; x2++)
-							sanddraw(e[(int)*(c + i)], BRUSH_POINT, startx + x2, starty + y2, 0, 0, 0, 0);
+			for (int y2 = y; y2 < y + sy; y2++) {
+				for (int i = 0; i < l; i += xstep) {
+					const Uint16 ei = e[static_cast<unsigned char>(c[i])];
+					if (ei != 1) {
+						const int x0 = i * sx / xstep;
+						for (int x2 = x0; x2 < x0 + sx; x2++)
+							sanddraw(ei, BRUSH_POINT, startx + x2, starty + y2, 0, 0, 0, 0);
+					}
+				}
+			}
 		}
-		for (tmp = 0; tmp < ystep; tmp++) {
-			dit++;
-			if (dit == data.end())
-				return;
+
+		for (int tmp = 0; tmp < ystep; tmp++) {
+			++dit;
+			if (dit == data.end()) return;
 		}
 		y += sy;
 	}
-};
+}
 
 char* ActionDrawObject::toString() {
-	int len = 0;
+	size_t len = 0;
 	for (int i = 0; i < 256; i++)
-		if (elements[i])
-			len += strlen(elements[i]->text);
-	std::list<char*>::iterator dit = data.begin();
-	while (dit != data.end()) {
-		len += strlen(*dit) + 3;
-		dit++;
-	}
-	char* tmp = new char[1024 + strlen(xoffset->text) + strlen(yoffset->text) + len];
-	char* tmp2 = new char[1024 + strlen(xoffset->text) + strlen(yoffset->text) + len];
-	sprintf(tmp, "DRAW 0 OBJECT %s %s", xoffset->text, yoffset->text);
-	for (int i2 = 0; i2 < 256; i2++) {
-		if (elements[i2]) {
+		if (elements[i]) len += strlen(elements[i]->text);
+	for (const auto* s : data) len += strlen(s) + 3;
+
+	const size_t tlen = 1024 + strlen(xoffset->text) + strlen(yoffset->text) + len;
+	char* tmp = new char[tlen];
+	char* tmp2 = new char[tlen];
+
+	snprintf(tmp, tlen, "DRAW 0 OBJECT %s %s", xoffset->text, yoffset->text);
+
+	for (int i = 0; i < 256; i++) {
+		if (elements[i]) {
 			strcpy(tmp2, tmp);
-			sprintf(tmp, "%s %c %s", tmp2, (char)i2, elements[i2]->text);
+			snprintf(tmp, tlen, "%s %c %s", tmp2,
+				static_cast<char>(i), elements[i]->text);
 		}
 	}
+
 	strcpy(tmp2, tmp);
-	sprintf(tmp, "%s {\n", tmp2);
-	dit = data.begin();
-	while (dit != data.end()) {
+	snprintf(tmp, tlen, "%s {\n", tmp2);
+
+	for (const auto* s : data) {
 		strcpy(tmp2, tmp);
-		sprintf(tmp, "%s \"%s\"\n", tmp2, *dit);
-		dit++;
+		snprintf(tmp, tlen, "%s \"%s\"\n", tmp2, s);
 	}
+
 	strcpy(tmp2, tmp);
-	sprintf(tmp, "%s\n}", tmp2);
-	delete (tmp2);
+	snprintf(tmp, tlen, "%s\n}", tmp2);
+	delete[] tmp2;
 	return tmp;
 }
 
@@ -1883,121 +1890,111 @@ ActionKey::~ActionKey() {
 }
 
 void ActionList::exec() {
-	int c, i, i2;
-	Element* e;
-	Group* g;
 	char tmp[255];
-	std::list<int>::iterator it;
-	std::list<Var*>::iterator it2;
-	std::list<Var*>* vars;
-	std::list<Interaction*>::iterator it3;
-	std::list<Die*>::iterator it4;
-	std::list<Trigger*>::iterator it5;
-	std::list<Action*>::iterator it6;
-	std::list<Timer*>::iterator it7;
-	std::list<Timer*> timerlist;
-	Trigger* trigger;
+
 	switch (function) {
-	case ACTION_LIST_ELEMENTS:
+	case ACTION_LIST_ELEMENTS: {
 		print("(ELEMENTS)", owner);
-		e = getElement(0);
-		for (i = 2; e[i].name; i++)
-			print(e[i].name, owner);
+		Element* e = getElement(0);
+		for (int i = 2; e[i].name; i++) print(e[i].name, owner);
 		print("(END)", owner);
 		break;
-	case ACTION_LIST_GROUP:
+	}
+	case ACTION_LIST_GROUP: {
 		print("(GROUP)", owner);
-		e = getElement(0);
-		g = getGroup(findGroup(element, false, -1));
-		for (it = g->elements.begin(); it != g->elements.end(); it++)
-			print(e[*it].name, owner);
+		Element* e = getElement(0);
+		Group* g = getGroup(findGroup(element, false, -1));
+		for (auto v : g->elements) print(e[v].name, owner);
 		print("(END)", owner);
 		break;
-	case ACTION_LIST_GROUPS:
+	}
+	case ACTION_LIST_GROUPS: {
 		print("(GROUP)", owner);
-		c = countGroups();
-		for (i = 0; i < c; i++)
+		const int groups = countGroups();
+		for (int i = 0; i < groups; i++)
 			print(getGroup(i)->name, owner);
 		print("(END)", owner);
 		break;
-	case ACTION_LIST_VARS:
+	}
+	case ACTION_LIST_VARS: {
 		print("(VARS)", owner);
-		vars = getVars();
-		for (it2 = vars->begin(); it2 != vars->end(); it2++)
-			print((*it2)->name, owner);
+		for (auto* v : *getVars()) print(v->name, owner);
 		print("(END)", owner);
 		break;
-	case ACTION_LIST_INTERACTIONS:
+	}
+	case ACTION_LIST_INTERACTIONS: {
 		print("(INTERACTIONS)", owner);
-		e = getElement(findElement(element, false));
-		for (it3 = e->interactions->begin(); it3 != e->interactions->end(); it3++) {
-			char* tmp = (*it3)->toString(element);
-			print((*it3)->toString(element), owner);
-			delete (tmp);
+		Element* e = getElement(findElement(element, false));
+		for (auto* inter : *e->interactions) {
+			char* s = inter->toString(element);
+			print(s, owner);
+			delete[] s;
 		}
 		print("(END)", owner);
 		break;
-	case ACTION_LIST_ELEMENTGROUPS:
-		sprintf(tmp, "(ELEMENTGROUP:%s)", element);
+	}
+	case ACTION_LIST_ELEMENTGROUPS: {
+		snprintf(tmp, sizeof(tmp), "(ELEMENTGROUP:%s)", element);
 		print(tmp, owner);
-		i2 = findElement(element, false);
-		c = countGroups();
-		for (i = 0; i < c; i++) {
+		const int i2 = findElement(element, false);
+		const int groups = countGroups();
+		for (int i = 0; i < groups; i++)
 			if (isElementInGroup(getGroup(i), i2))
 				print(getGroup(i)->name, owner);
-		}
 		print("(END)", owner);
 		break;
-	case ACTION_LIST_DIETOS:
-		sprintf(tmp, "(ELEMENTDIETOS:%s)", element);
+	}
+	case ACTION_LIST_DIETOS: {
+		snprintf(tmp, sizeof(tmp), "(ELEMENTDIETOS:%s)", element);
 		print(tmp, owner);
-		e = getElement(findElement(element, false));
-		for (it4 = e->dies->begin(); it4 != e->dies->end(); it4++)
-			print(getElement((*it4)->dieto)->name, owner);
+		Element* e = getElement(findElement(element, false));
+		for (auto* d : *e->dies) print(getElement(d->dieto)->name, owner);
 		print("(END)", owner);
 		break;
-	case ACTION_LIST_TRIGGERS:
+	}
+	case ACTION_LIST_TRIGGERS: {
 		print("(TRIGGERS)", owner);
-		for (it5 = triggers.begin(); it5 != triggers.end(); it5++)
-			print((*it5)->name, owner);
+		for (auto* trig : triggers) print(trig->name, owner);
 		print("(END)", owner);
 		break;
-	case ACTION_LIST_TRIGGEREXECS:
+	}
+	case ACTION_LIST_TRIGGEREXECS: {
 		print("(TRIGGEREXECS)", owner);
-		i = 0;
-		for (it5 = triggers.begin(); it5 != triggers.end(); it5++) {
-			sprintf(tmp, "%10u %s", (*it5)->execcount, (*it5)->name);
-			i += (*it5)->execcount;
+		int total = 0;
+		for (auto* trig : triggers) {
+			snprintf(tmp, sizeof(tmp), "%10u %s", trig->execcount, trig->name);
+			total += trig->execcount;
 			print(tmp, owner);
 		}
 		print("(END)", owner);
-		sprintf(tmp, "(ALLEXECS) %i", i);
+		snprintf(tmp, sizeof(tmp), "(ALLEXECS) %i", total);
 		print(tmp, owner);
 		break;
-	case ACTION_LIST_ACTIONS:
-		trigger = findTrigger(element, owner);
-		sprintf(tmp, "(ACTIONS:%s)", element);
+	}
+	case ACTION_LIST_ACTIONS: {
+		Trigger* trig = findTrigger(element, owner);
+		snprintf(tmp, sizeof(tmp), "(ACTIONS:%s)", element);
 		print(tmp, owner);
-		for (it6 = trigger->actions.begin(); it6 != trigger->actions.end(); it6++)
-			print((*it6)->toString(), owner);
+		for (auto* act : trig->actions) print(act->toString(), owner);
 		print("(END)", owner);
 		break;
-	case ACTION_LIST_TIMERS:
+	}
+	case ACTION_LIST_TIMERS: {
 		print("(TIMERS)", owner);
-		timerlist.clear();
+		std::list<Timer*> timerlist;
 		while (!frametriggers.empty()) {
 			Timer* t = frametriggers.top();
+			frametriggers.pop();
 			if (t && t->trigger && t->trigger->name) {
-				sprintf(tmp, "%i %s", t->value - thisframe, t->trigger->name);
+				snprintf(tmp, sizeof(tmp), "%i %s", t->value - thisframe, t->trigger->name);
 				print(tmp, owner);
 				timerlist.push_back(t);
 			}
-			frametriggers.pop();
 		}
-		for (it7 = timerlist.begin(); it7 != timerlist.end(); it7++)
-			frametriggers.push(*it7);
+		for (auto* t : timerlist) frametriggers.push(t);
 		print("(END)", owner);
 		break;
+	}
 	}
 }
 
@@ -2236,9 +2233,7 @@ void ActionInclude::exec() {
 			if (strstr(text, "http://") == text) {
 				checkfile(text, false);
 				parsefile(text, owner);
-			} else {
-				parsechar(text, owner, filename);
-			}
+			} else parsechar(text, owner, filename);
 		}
 	} else if (!strcmp(filename, "FILEDIALOG")) {
 		char* text;
@@ -2247,8 +2242,7 @@ void ActionInclude::exec() {
 			strcpy(tmp, param);
 			tmp[strlen(tmp) - 1] = 0;
 			for (unsigned int i = 0; i < strlen(param); i++)
-				if (tmp[i] == '|')
-					tmp[i] = 0;
+				if (tmp[i] == '|') tmp[i] = 0;
 			if (text = opendialog(tmp, 0)) {
 				checkfile(text, false);
 				parsefile(text, owner);
@@ -2266,8 +2260,9 @@ void ActionInclude::exec() {
 }
 
 char* ActionInclude::toString() {
-	char* tmp = new char[1024 + strlen(filename)];
-	sprintf(tmp, "INCLUDE \"%s\"", filename);
+	const int len = 1024 + strlen(filename);
+	char* tmp = new char[len];
+	snprintf(tmp, len, "INCLUDE \"%s\"", filename);
 	return tmp;
 }
 
@@ -2294,18 +2289,18 @@ void ActionNoBias::exec() {
 }
 
 char* ActionNoBias::toString() {
-	char* tmp = new char[1024 + strlen(e->text)];
-	sprintf(tmp, "NOBIAS %s", e->text);
+	const int len = 1024 + strlen(e->text);
+	char* tmp = new char[len];
+	snprintf(tmp, len, "NOBIAS %s", e->text);
 	return tmp;
 }
 
 ActionNoBias::~ActionNoBias() {
-	delete (e);
+	delete e;
 }
 
 void ActionMenu::exec() {
-	if (action == ACTION_MENU_CLEAR)
-		clearMenuBar(bar);
+	if (action == ACTION_MENU_CLEAR) clearMenuBar(bar);
 	redrawmenu(3);
 }
 
@@ -2313,25 +2308,18 @@ char* ActionMenu::toString() {
 	char* tmp = new char[1024];
 	if (action == ACTION_MENU_CLEAR) {
 		char* w = 0;
-		if (bar == MENU_BAR_TOP)
-			w = "TOP";
-		if (bar == MENU_BAR_LEFT)
-			w = "LEFT";
-		if (bar == MENU_BAR_RIGHT)
-			w = "RIGHT";
-		if (bar == MENU_BAR_BOTTOM)
-			w = "BOTTOM";
-		if (bar == MENU_BAR_SUB)
-			w = "SUB";
+		if (bar == MENU_BAR_TOP) w = "TOP";
+		if (bar == MENU_BAR_LEFT) w = "LEFT";
+		if (bar == MENU_BAR_RIGHT) w = "RIGHT";
+		if (bar == MENU_BAR_BOTTOM) w = "BOTTOM";
+		if (bar == MENU_BAR_SUB) w = "SUB";
+
 		sprintf(tmp, "MENU %s CLEAR", w);
-	} else {
-		sprintf(tmp, "MENU REFRESH");
-	}
+	} else sprintf(tmp, "MENU REFRESH");
 	return tmp;
 }
 
-ActionMenu::~ActionMenu() {
-}
+ActionMenu::~ActionMenu() {}
 
 void ActionSubMenu::exec() {
 	if (function) {
@@ -2339,8 +2327,7 @@ void ActionSubMenu::exec() {
 	} else {
 		if ((x->ok) && (y->ok))
 			showSubMenu(stay, align, x->val(), y->val());
-		else
-			showSubMenu(stay, align);
+		else showSubMenu(stay, align);
 	}
 }
 
@@ -2364,29 +2351,26 @@ char* ActionSubMenu::toString() {
 	return tmp;
 }
 
-ActionSubMenu::~ActionSubMenu() {
-}
+ActionSubMenu::~ActionSubMenu() {}
 
 void frametimer() {
 	static Var* vt = (Var*)setVar("FRAME", 0);
 	vt->value = thisframe;
 	if (debugframe->value) {
 		char tmp[512];
-		sprintf(tmp, "frame: %i timers: %i", thisframe, frametriggers.size());
+		snprintf(tmp, sizeof(tmp), "frame: %i timers: %i", thisframe, frametriggers.size());
 		std::cout << tmp << std::endl;
 	}
 	timercleared = false;
 	if (frametriggers.size()) {
 		Timer* t = frametriggers.top();
 		while (!frametriggers.empty() && (t->value <= thisframe)) {
-			if (t->params)
-				addparams(t->params);
+			if (t->params) addparams(t->params);
 			t->trigger->exec();
-			if (t->params)
-				removeparams();
+			if (t->params) removeparams();
+
 			if (timercleared) {
-				if (frametriggers.size() == 0)
-					return;
+				if (frametriggers.size() == 0) return;
 				if (t == frametriggers.top()) {
 					timerStack.push(t);
 					frametriggers.pop();

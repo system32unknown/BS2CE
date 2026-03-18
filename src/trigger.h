@@ -315,10 +315,8 @@ struct ActionIf : Action {
 				addparams(calcparams(params));
 				trigger->exec();
 				removeparams();
-			} else
-				trigger->exec();
-		} else if (elsetrigger)
-			elsetrigger->exec();
+			} else trigger->exec();
+		} else if (elsetrigger) elsetrigger->exec();
 	}
 	~ActionIf();
 	char* toString();

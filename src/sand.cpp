@@ -345,7 +345,7 @@ void sandwrite(Uint16 element, int x, int y, int size, char* text, int align) {
 void recalccolors(bool b) {
 	if (!sandelements)
 		return;
-	if (b == false) {
+	if (!b) {
 		mustredraw = true;
 		return;
 	} else if (mustredraw) {

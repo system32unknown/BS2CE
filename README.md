@@ -1,7 +1,7 @@
 # BS2CE - Burning Sand 2 Community Edition
 
 A community-maintained fork of **Burning Sand 2**, originally created by **Max Nagl**.  
-This edition is developed and maintained by **Altertoriel** and contributors.
+This edition is developed and maintained by **Altertoriel**.
 
 ## About
 
@@ -13,6 +13,5 @@ See [BUILDING.md](BUILDING.md) for instructions on how to build the project from
 
 ## Credits
 
-- **Max Nagl** - Original Burning Sand 2 ([siebn.de](http://siebn.de/))
+- **Max Nagl** - Original Game of Burning Sand 2 ([siebn.de](http://siebn.de/))
 - **Altertoriel** - Community Edition
-- All contributors who have helped improve and maintain this project

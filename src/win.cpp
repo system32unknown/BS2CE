@@ -108,11 +108,10 @@ void ossystem(char* cmd, char* parameters, bool wait, bool hidden) {
 		if (ShellExecuteExA(&t) && wait)
 			while (WaitForSingleObject(t.hProcess, INFINITE) != WAIT_OBJECT_0);
 	} else {
-		// No parameters: write cmd to a temp batch file and execute it
 		{
 			std::ofstream batchfile("tmp.bat", std::ios::out);
 			batchfile.write(cmd, static_cast<std::streamsize>(strlen(cmd)));
-		} // closed by RAII
+		}
 		ossystem("tmp.bat", const_cast<char*>(""), wait, hidden);
 		remove("tmp.bat");
 	}
@@ -221,7 +220,7 @@ char* inputbox() {
 	return nullptr;
 }
 
-#else  // non-Windows stubs
+#else
 
 void osinit(char* filename) {
 	path = new char[strlen(filename) + 1];

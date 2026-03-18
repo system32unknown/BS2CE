@@ -94,37 +94,31 @@ bool checkfile(char* text, bool doexit) {
 	}
 
 	for (int i = 0; BLOCKED_SUBSTRINGS[i]; ++i)
-		if (strstr(text, BLOCKED_SUBSTRINGS[i]))
-			exit(1);
+		if (strstr(text, BLOCKED_SUBSTRINGS[i])) exit(1);
 
 	for (int i = 0; BLOCKED_EXACT[i]; ++i)
-		if (strcmp(text, BLOCKED_EXACT[i]) == 0)
-			exit(1);
+		if (strcmp(text, BLOCKED_EXACT[i]) == 0) exit(1);
 
 	for (int i = 0; PERCENT_ENCODINGS[i].token; ++i)
-	    replaceall(text, const_cast<char*>(PERCENT_ENCODINGS[i].token), PERCENT_ENCODINGS[i].value, 0);
+		replaceall(text, const_cast<char*>(PERCENT_ENCODINGS[i].token), PERCENT_ENCODINGS[i].value, 0);
 
 	if (strncmp(text, "bs2mod://", 9) == 0) {
 		const size_t len = strlen(text);
 		memmove(text + 7, text + 9, len - 9 + 1);
 		memcpy(text, "http://", 7);
 
-		// Confirm with the user before proceeding.
-        std::string msg = std::string("Would you like to run this mod?\n") + text + "\nIt could contain viruses.";
-        std::vector<char> msgBuf(msg.begin(), msg.end());
-        msgBuf.push_back('\0');
-        if (!yesnobox(msgBuf.data(), "Download and run mod?"))  return false;
+		std::string msg = std::string("Would you like to run this mod?\n") + text + "\nIt could contain viruses.";
+		std::vector<char> msgBuf(msg.begin(), msg.end());
+		msgBuf.push_back('\0');
+		if (!yesnobox(msgBuf.data(), "Download and run mod?"))  return false;
 	}
 
-	// ---- HTTP download ----
 	if (strncmp(text, "http://", 7) == 0) {
 		const size_t len = strlen(text);
 
-		// Trailing '!' means force-refresh even if already cached.
 		bool refresh = (len > 0 && text[len - 1] == '!');
 		if (refresh) text[len - 1] = '\0';
 
-		// Build the download command.
 		char dlCmd[1024];
 #ifdef COMPILER_WINDOWS
 		snprintf(dlCmd, sizeof(dlCmd), "@dl.dll -x -P \"webdls\" \"%s\"", text);
@@ -132,16 +126,12 @@ bool checkfile(char* text, bool doexit) {
 		snprintf(dlCmd, sizeof(dlCmd), "wget -x -P \"webdls\" \"%s\"", text);
 #endif
 
-		// Rewrite the URL into the local path it will be saved to:
-		// "http://example.com/foo?bar" → "webdls/example.com/foo"
-		memmove(text + 6, text + 7, strlen(text + 7) + 1); // shift left 1 to fit "webdls"
+		memmove(text + 6, text + 7, strlen(text + 7) + 1);
 		memcpy(text, "webdls", 6);
 
-		// Strip query string.
 		char* q = strstr(text, "?");
 		if (q) *q = '\0';
 
-		// Download if not already cached (or refresh forced).
 		std::ifstream inp(checkfilename(text));
 		const bool cached = inp.good();
 		inp.close();
@@ -161,13 +151,11 @@ bool checkfile(char* text, bool doexit) {
 		return true;
 	}
 
-	// ---- Block absolute Windows drive paths (e.g. "C:...") ----
 	if (strlen(text) >= 2 && text[1] == ':') {
 		if (doexit) exit(1);
 		return false;
 	}
 
-	// ---- Block absolute Unix/UNC paths ----
 	if (text[0] == '/' || text[0] == '\\') {
 		if (doexit) exit(0);
 		return false;
@@ -186,50 +174,51 @@ Token::Token(char* text) {
 }
 
 char* Token::getToken(bool math) {
-	if (pos >= length)
-		return NULL;
-	char* token;
-	while (((text[pos] == '\r') || (text[pos] == '\n') || (text[pos] == ' ') || (text[pos] == '\t')) && (pos < length))
+	if (pos >= length) return nullptr;
+
+	while (pos < length && (text[pos] == '\r' || text[pos] == '\n' || text[pos] == ' ' || text[pos] == '\t'))
 		pos++;
-	if (pos >= length)
-		return 0;
+
+	if (pos >= length) return nullptr;
+
 	bool quote = false;
 	int bracket = 0;
 	bool bracket2 = false;
 	long end = pos;
 	atom = 0;
+
 	if (text[pos] == '"') {
 		quote = true;
 		atom = TOKEN_ATOM_QUOTE;
-	}
-	if (text[pos] == '(') {
+	} else if (text[pos] == '(') {
 		bracket = 1;
 		atom = TOKEN_ATOM_BRACKET1;
-	}
-	if ((text[pos] == '<') && (math == false)) {
+	} else if (text[pos] == '<' && !math) {
 		bracket2 = true;
 		atom = TOKEN_ATOM_BRACKET2;
 	}
-	while ((quote || bracket || bracket2 || ((text[end] != '\r') && (text[end] != '\n') && (text[end] != ' ') && (text[end] != '\t'))) && (end < length)) {
+
+	while (end < length && (quote || bracket || bracket2 || (text[end] != '\r' && text[end] != '\n' && text[end] != ' ' && text[end] != '\t'))) {
 		end++;
-		if (bracket && (text[end] == '('))
-			bracket++;
-		if (quote && (text[end] == '"'))
-			quote = false;
-		if (bracket && (text[end] == ')'))
-			bracket--;
-		if (bracket2 && (text[end] == '>'))
-			bracket2 = false;
+		if (end < length) {
+			if (bracket && text[end] == '(') bracket++;
+			if (quote && text[end] == '"') quote = false;
+			if (bracket && text[end] == ')') bracket--;
+			if (bracket2 && text[end] == '>') bracket2 = false;
+		}
 	}
+
+	char* token;
 	if (atom != TOKEN_ATOM_QUOTE) {
 		token = new char[end - pos + 1];
 		memcpy(token, text + pos, end - pos);
-		token[end - pos] = 0;
+		token[end - pos] = '\0';
 	} else {
 		token = new char[end - pos - 1];
 		memcpy(token, text + pos + 1, end - pos - 2);
-		token[end - pos - 2] = 0;
+		token[end - pos - 2] = '\0';
 	}
+
 	pos = end;
 	return token;
 }
@@ -278,10 +267,10 @@ int tmptriggers = 0;
 Trigger* parseTrigger(char* name, int owner) {
 	if (name) {
 		if (!strcmp(name, "{")) {
-			char* tmp = new char[100];
-			sprintf(tmp, "TMPTRIGGER%i", tmptriggers++);
+			char* tmp = new char[32];
+			snprintf(tmp, 32, "TMPTRIGGER%i", tmptriggers++);
 			triggerstack.push(tmp);
-			return findTrigger(tmp, owner);
+			return findTrigger(triggerstack.top(), owner);
 		}
 		if (!strcmp(name, "THIS") && triggerstack.size())
 			return findTrigger(triggerstack.top(), owner);
@@ -310,117 +299,118 @@ int parseenc(char* data, int owner, char* filename) {
 }
 
 int parsefile(char* filename, int owner) {
-    const size_t flen = strlen(filename);
+	const size_t flen = strlen(filename);
 
-    auto endsWith = [&](const char* ext) {
-        const size_t elen = strlen(ext);
-        return (flen >= elen) && !strcmp(filename + flen - elen, ext);
-    };
+	auto endsWith = [&](const char* ext) {
+		const size_t elen = strlen(ext);
+		return (flen >= elen) && !strcmp(filename + flen - elen, ext);
+		};
 
-    if (endsWith(".png") || endsWith(".PNG") || endsWith(".bmp") || endsWith(".BMP")) {
-        load(filename);
-        return 0;
-    }
+	if (endsWith(".png") || endsWith(".PNG") || endsWith(".bmp") || endsWith(".BMP")) {
+		load(filename);
+		return 0;
+	}
 
-    std::ifstream file(checkfilename(filename), std::ios::in | std::ios::ate | std::ios::binary);
-    if (!file) {
-        char tmp[10000];
-        snprintf(tmp, sizeof(tmp), "Error opening file \"%s\"", filename);
-        error(tmp, owner);
-        return 0;
-    }
+	std::ifstream file(checkfilename(filename), std::ios::in | std::ios::ate | std::ios::binary);
+	if (!file) {
+		char tmp[10000];
+		snprintf(tmp, sizeof(tmp), "Error opening file \"%s\"", filename);
+		error(tmp, owner);
+		return 0;
+	}
 
-    const long size = static_cast<long>(file.tellg());
-    file.seekg(0, std::ios::beg);
-    char* data = new char[size + 2];
-    file.read(data, size);
-    data[size] = 0;
-    file.close();
+	const long size = static_cast<long>(file.tellg());
+	file.seekg(0, std::ios::beg);
+	char* data = new char[size + 2];
+	file.read(data, size);
+	data[size] = 0;
+	file.close();
 
-    if (data[0] == '<') {
-        if (strstr(data, "<bs2>") && strstr(data, "</bs2>")) {
-            {
-                std::ofstream savefile(checkfilename("xml2bs2.xml"), std::ios::out | std::ios::ate | std::ios::binary);
-                savefile.write(data, strlen(data));
-            }
-            delete[] data;
-            ossystem("Wscript", "xml2bs2.js");
-            mousebuttonbug(true);
-            return parsefile("xml2bs2.bs2", owner);
-        } else {
-            auto parseTagContent = [&](const char* openTag, const char* closeTag) {
-                char* start = data;
-                char* end = nullptr;
-                while ((start = strstr(start, openTag)) != nullptr) {
-                    start = strstr(start, ">") + 1;
-                    if (!start) break;
-                    end = strstr(start, closeTag);
-                    if (!end) break;
-                    const char saved = *end;
-                    *end = 0;
-                    replacehtmlstrings(start);
-                    parsechar(start, owner, filename);
-                    *end = saved;
-                    start = end + 1;
-                }
-            };
+	if (data[0] == '<') {
+		if (strstr(data, "<bs2>") && strstr(data, "</bs2>")) {
+			{
+				std::ofstream savefile(checkfilename("xml2bs2.xml"), std::ios::out | std::ios::ate | std::ios::binary);
+				savefile.write(data, strlen(data));
+			}
+			delete[] data;
+			ossystem("Wscript", "xml2bs2.js");
+			mousebuttonbug(true);
+			return parsefile("xml2bs2.bs2", owner);
+		} else {
+			auto parseTagContent = [&](const char* openTag, const char* closeTag) {
+				char* start = data;
+				char* end = nullptr;
+				while ((start = strstr(start, openTag)) != nullptr) {
+					start = strstr(start, ">") + 1;
+					if (!start) break;
+					end = strstr(start, closeTag);
+					if (!end) break;
+					const char saved = *end;
+					*end = 0;
+					replacehtmlstrings(start);
+					parsechar(start, owner, filename);
+					*end = saved;
+					start = end + 1;
+				}
+				};
 
-            parseTagContent("<pre",  "</pre>");
-            parseTagContent("<code", "</code>");
+			parseTagContent("<pre", "</pre>");
+			parseTagContent("<code", "</code>");
 
-            // <td class="code"> handled separately — no replacehtmlstrings reorder issue
-            char* start = data;
-            while ((start = strstr(start, "<td class=\"code\"")) != nullptr) {
-                start = strstr(start, ">") + 1;
-                if (!start) break;
-                char* end = strstr(start, "</td>");
-                if (!end) break;
-                const char saved = *end;
-                *end = 0;
-                replacehtmlstrings(start);
-                parsechar(start, owner, filename);
-                *end = saved;
-                start = end + 1;
-            }
-        }
-    } else {
-        if (endsWith(".bf") || endsWith(".BF")) {
-            secretcode++;
-            char* bf = bf_exec(data);
-            parsechar(bf, owner, filename);
-            delete[] bf;
-            secretcode--;
-        } else if (endsWith(".bs2e") || endsWith(".BS2E")) {
-            parseenc(data, owner, filename);
-        } else parsechar(data, owner, filename);
-    }
+			char* start = data;
+			while ((start = strstr(start, "<td class=\"code\"")) != nullptr) {
+				start = strstr(start, ">") + 1;
+				if (!start) break;
+				char* end = strstr(start, "</td>");
+				if (!end) break;
+				const char saved = *end;
+				*end = 0;
+				replacehtmlstrings(start);
+				parsechar(start, owner, filename);
+				*end = saved;
+				start = end + 1;
+			}
+		}
+	} else {
+		if (endsWith(".bf") || endsWith(".BF")) {
+			secretcode++;
+			char* bf = bf_exec(data);
+			parsechar(bf, owner, filename);
+			delete[] bf;
+			secretcode--;
+		} else if (endsWith(".bs2e") || endsWith(".BS2E")) {
+			parseenc(data, owner, filename);
+		} else parsechar(data, owner, filename);
+	}
 
-    delete[] data;
-    return 0;
+	delete[] data;
+	return 0;
 }
 
 int parsechar(char* text, int owner, char* filename) {
-	if (!strlen(text))
-		return 0;
+	if (!text || !text[0]) return 0;
+
 	removeall(text, "\\\n", ' ');
 	removeall(text, "\\ \n", ' ');
 	removeall(text, "\\\r\n", ' ');
 	removeall(text, "\\ \r\n", ' ');
-	char* line = NULL;
-	int linenum = 0;
+
+	const long length = static_cast<long>(strlen(text));
 	long pos = 0;
 	long end = 0;
-	long length = strlen(text);
+	int linenum = 0;
+
 	while (pos < length) {
-		while ((text[end] != '\n') && (end < length))
-			end++;
-		line = new char[end - pos + 1];
+		while (end < length && text[end] != '\n') end++;
+
+		char* line = new char[end - pos + 1];
 		memcpy(line, text + pos, end - pos);
-		line[end - pos] = 0;
+		line[end - pos] = '\0';
 		pos = ++end;
 		linenum++;
+
 		parseline(line, linenum, owner, filename);
-		delete (line);
+		delete[] line;
 	}
 	return 0;
 }
@@ -1639,32 +1629,29 @@ Action* parseaction(Token* tokens, int owner) {
 
 Varint** getParameters(Token* tokens, char* exception) {
 	Varint** r = new Varint * [11];
-	Varint* t;
-	int i;
-	for (i = 0; i < 10; i++)
-		r[i] = NULL;
-	for (i = 0; i < 10; i++) {
+	for (int i = 0; i < 11; i++) r[i] = nullptr;
+
+	for (int i = 0; i < 10; i++) {
 		char* tmp = tokens->getToken();
+
 		if ((i == 0) && tmp && exception && !strcmp(exception, tmp)) {
-			delete (r);
-			delete (tmp);
-			return (Varint**)-1;
+			delete[] r;
+			delete[] tmp;
+			return reinterpret_cast<Varint**>(-1);
 		}
-		t = new Varint(tmp);
+
+		Varint* t = new Varint(tmp);
 		if (t->ok) {
 			r[i] = t;
 		} else {
+			delete t;
 			if (i == 0) {
-				delete (t);
-				delete (r);
-				return 0;
-			} else {
-				r[i + 1] = 0;
-				delete (t);
-				return r;
+				delete[] r;
+				return nullptr;
 			}
+			return r;
 		}
 	}
-	r[10] = 0;
+
 	return r;
 }

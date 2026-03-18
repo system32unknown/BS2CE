@@ -199,8 +199,8 @@ void drawmenu(SDL_Surface* screen) {
 
 	border = SDL_MapRGB(screen->format, borderr->value, borderg->value, borderb->value);
 	background = SDL_MapRGB(screen->format, backgroundr->value, backgroundg->value, backgroundb->value);
-	menufontfgcolor = {static_cast<Uint8>(menufontcolorr->value), static_cast<Uint8>(menufontcolorg->value), static_cast<Uint8>(menufontcolorb->value), 0};
-	menufontbgcolor = {static_cast<Uint8>(backgroundr->value), static_cast<Uint8>(backgroundg->value), static_cast<Uint8>(backgroundb->value), 0};
+	menufontfgcolor = { static_cast<Uint8>(menufontcolorr->value), static_cast<Uint8>(menufontcolorg->value), static_cast<Uint8>(menufontcolorb->value), 0 };
+	menufontbgcolor = { static_cast<Uint8>(backgroundr->value), static_cast<Uint8>(backgroundg->value), static_cast<Uint8>(backgroundb->value), 0 };
 
 	if ((vstatusold != vstatus->value) || (vmenutopold != vmenutop->value) || (vmenuleftold != vmenuleft->value) || (vmenurightold != vmenuright->value) || (vmenubottomold != vmenubottom->value)) {
 		vmenutopold = vmenutop->value;
@@ -277,10 +277,10 @@ void drawmenu(SDL_Surface* screen) {
 	if (redraw >= 2) {
 		if ((vview->value == 10) ||
 			((valpha1->value < 256) && (vview->value == 0))) {
-			clearrects[0] = {0, 0, static_cast<Uint16>(dstrect.x), static_cast<Uint16>(screen->h)};
-			clearrects[1] = {static_cast<Sint16>(dstrect.x), 0, 0, 0};
-			clearrects[2] = {static_cast<Sint16>(dstrect.x), static_cast<Sint16>(dstrect.y + srcrect.h), 0, static_cast<Uint16>(screen->h - (dstrect.y + srcrect.h))};
-			clearrects[3] = {static_cast<Sint16>(dstrect.x + srcrect.w), 0, static_cast<Uint16>(screen->w - (dstrect.x + srcrect.w)), static_cast<Uint16>(screen->h)};
+			clearrects[0] = { 0, 0, static_cast<Uint16>(dstrect.x), static_cast<Uint16>(screen->h) };
+			clearrects[1] = { static_cast<Sint16>(dstrect.x), 0, 0, 0 };
+			clearrects[2] = { static_cast<Sint16>(dstrect.x), static_cast<Sint16>(dstrect.y + srcrect.h), 0, static_cast<Uint16>(screen->h - (dstrect.y + srcrect.h)) };
+			clearrects[3] = { static_cast<Sint16>(dstrect.x + srcrect.w), 0, static_cast<Uint16>(screen->w - (dstrect.x + srcrect.w)), static_cast<Uint16>(screen->h) };
 			for (auto& r : clearrects) SDL_FillRect(screen, &r, background);
 		} else SDL_FillRect(screen, nullptr, background);
 		SDL_DrawRect16(screen, MENU_LEFT, MENU_TOP, screen->w - MENU_RIGHT - MENU_LEFT, screen->h - MENU_BOTTOM - MENU_TOP, border);
@@ -345,7 +345,7 @@ void drawmenu(SDL_Surface* screen) {
 	if (!vview->value) {
 		if (zoom == 1) {
 			if (bglayer) {
-				SDL_Rect r = {srcrect.x, static_cast<Sint16>(1 + srcrect.y), srcrect.w, srcrect.h};
+				SDL_Rect r = { srcrect.x, static_cast<Sint16>(1 + srcrect.y), srcrect.w, srcrect.h };
 				SDL_BlitSurface(bglayer, &r, screen, &dstrect);
 			}
 			if (valpha1->value < 255) {
@@ -363,7 +363,7 @@ void drawmenu(SDL_Surface* screen) {
 				SDL_BlitSurface(sandsurface, &srcrect, screen, &dstrect);
 			}
 			if (fglayer) {
-				SDL_Rect r = {srcrect.x, static_cast<Sint16>(1 + srcrect.y), srcrect.w, srcrect.h};
+				SDL_Rect r = { srcrect.x, static_cast<Sint16>(1 + srcrect.y), srcrect.w, srcrect.h };
 				SDL_SetColorKey(fglayer,
 					fgtransparentcolor->value ? SDL_SRCCOLORKEY : 0,
 					SDL_MapRGB(fglayer->format, fgtransparentcolorr->value, fgtransparentcolorg->value, fgtransparentcolorb->value));
@@ -450,20 +450,20 @@ void drawmenu(SDL_Surface* screen) {
 					const int elem = *(ypz + (x + dx) / zoom);
 					int t = 0;
 					switch (view) {
-					case 1: t = e[elem].weight;        break;
-					case 2: t = e[elem].spray;         break;
-					case 3: t = e[elem].slide;         break;
-					case 4: t = e[elem].viscousity;    break;
-					case 5: t = e[elem].dietotalrate;  break;
-					case 6: t = e[elem].r;             break;
-					case 7: t = e[elem].g;             break;
-					case 8: t = e[elem].b;             break;
+					case 1: t = e[elem].weight; break;
+					case 2: t = e[elem].spray; break;
+					case 3: t = e[elem].slide; break;
+					case 4: t = e[elem].viscousity; break;
+					case 5: t = e[elem].dietotalrate; break;
+					case 6: t = e[elem].r; break;
+					case 7: t = e[elem].g; break;
+					case 8: t = e[elem].b; break;
 					}
-					if (!t)                       *(yp + x) = colormapneutral;
-					else if (t > 0 && t < maxpos)      *(yp + x) = colormappositiv[t];
-					else if (t < 0 && t > maxneg)      *(yp + x) = colormapnegativ[-t];
-					else if (t > 0)                    *(yp + x) = colormappositiv[maxpos - 1];
-					else                               *(yp + x) = colormapnegativ[-(maxneg + 1)];
+					if (!t) *(yp + x) = colormapneutral;
+					else if (t > 0 && t < maxpos) *(yp + x) = colormappositiv[t];
+					else if (t < 0 && t > maxneg) *(yp + x) = colormapnegativ[-t];
+					else if (t > 0) *(yp + x) = colormappositiv[maxpos - 1];
+					else *(yp + x) = colormapnegativ[-(maxneg + 1)];
 				}
 			} else if (view == 10) {
 				for (int x = dstrect.x; x < xto; x++) {
@@ -574,7 +574,7 @@ void drawmenu(SDL_Surface* screen) {
 	static char status_textold[4097] = {};
 	if (vstatusold && (strcmp(status_text, status_textold) || (redraw >= 2))) {
 		SDL_DrawLine16(screen, 0, screen->h - 18, screen->w, 0, border);
-		SDL_Rect r = {0, static_cast<Sint16>(screen->h - 17), static_cast<Uint16>(screen->w),  17};
+		SDL_Rect r = { 0, static_cast<Sint16>(screen->h - 17), static_cast<Uint16>(screen->w),  17 };
 		SDL_FillRect(screen, &r, background);
 		strcpy(status_textold, status_text);
 		SDL_DrawText16(screen, status_font, status_text, 2, screen->h - 2, border);

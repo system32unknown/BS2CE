@@ -28,7 +28,7 @@ SDL_Surface* screen = nullptr;
 unsigned int keydown[1024] = {};
 unsigned int keylastexec[1024] = {};
 
-const char* TITLE_GAME = "BS2CE";  // FIX: was non-const char* pointing at a string literal
+const char* TITLE_GAME = "BS2CE";
 
 void updatescreen() {
 	msectimer();
@@ -87,8 +87,7 @@ int main(int argc, char* argv[]) {
 	initConsole();
 	initnetwork();
 
-	for (int i = 0; i < MAX_STRINGS; i++)
-		strings[i] = nullptr;  // FIX: was 0 assigned to char*
+	for (int i = 0; i < MAX_STRINGS; i++) strings[i] = nullptr;
 
 	SDL_EnableKeyRepeat(1, 0);
 	for (int i = 0; i < 1024; i++)
@@ -373,8 +372,7 @@ int main(int argc, char* argv[]) {
 				else if (keystate[mclickmod->value])
 					clickmenu(screen, event.button.x, event.button.y, 2, true);
 				else
-					clickmenu(screen, event.button.x, event.button.y,
-						SDL_GetMouseState(nullptr, nullptr), true);
+					clickmenu(screen, event.button.x, event.button.y, SDL_GetMouseState(nullptr, nullptr), true);
 				break;
 
 			case SDL_MOUSEBUTTONUP:

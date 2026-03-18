@@ -93,8 +93,7 @@ uintptr_t setVar(char* name, int value, bool set) {
 				unsigned int i;
 				if (sscanf(tmp, "%i:%254s", &i, tmp) == 2) {
 					get_e
-						if ((getElement(e)->dies)->empty())
-							return 0;
+						if ((getElement(e)->dies)->empty()) return 0;
 					auto it2 = getElement(e)->dies->begin();
 					if (i <= static_cast<unsigned int>((getElement(e)->dies)->size()))
 						for (unsigned int ii = 0; ii < i; ii++) ++it2;
@@ -279,8 +278,7 @@ int getVar(char* name, int* value) {
 		if (!getVar(name + 12, &i)) getVar(name + 6, &i);
 		if (getGroup(i))
 			*value = static_cast<int>(getGroup(i)->elements.size());
-		else
-			*value = 0;
+		else *value = 0;
 		return true;
 	} else if (!strcmp(name, "COUNT:GROUPS")) {
 		*value = countGroups();
@@ -415,27 +413,27 @@ Varint::Varint(char* v, int max) {
 		if (t2 && v2) {
 			if (!a) a = new Varint(t);
 			b = new Varint(v2);
-			if (!strcmp(t2, "+"))      function = 2;
-			else if (!strcmp(t2, "-"))      function = 3;
-			else if (!strcmp(t2, "*"))      function = 4;
-			else if (!strcmp(t2, "/"))      function = 5;
-			else if (!strcmp(t2, "%"))      function = 6;
-			else if (!strcmp(t2, "&"))      function = 7;
-			else if (!strcmp(t2, "|"))      function = 8;
-			else if (!strcmp(t2, "&&"))     function = 9;
-			else if (!strcmp(t2, "||"))     function = 10;
-			else if (!strcmp(t2, "!="))     function = 11;
-			else if (!strcmp(t2, "=="))     function = 12;
-			else if (!strcmp(t2, "<"))      function = 13;
-			else if (!strcmp(t2, "<="))     function = 14;
-			else if (!strcmp(t2, ">"))      function = 15;
-			else if (!strcmp(t2, ">="))     function = 16;
-			else if (!strcmp(t2, "RAND"))   function = 17;
-			else if (!strcmp(t2, "PIXEL"))  function = 18;
-			else if (!strcmp(t2, "INGROUP"))function = 19;
-			else if (!strcmp(t2, "MIN"))    function = 20;
-			else if (!strcmp(t2, "MAX"))    function = 21;
-			else if (!strcmp(t2, "^"))      function = 22;
+			if (!strcmp(t2, "+")) function = 2;
+			else if (!strcmp(t2, "-")) function = 3;
+			else if (!strcmp(t2, "*")) function = 4;
+			else if (!strcmp(t2, "/")) function = 5;
+			else if (!strcmp(t2, "%")) function = 6;
+			else if (!strcmp(t2, "&")) function = 7;
+			else if (!strcmp(t2, "|")) function = 8;
+			else if (!strcmp(t2, "&&")) function = 9;
+			else if (!strcmp(t2, "||")) function = 10;
+			else if (!strcmp(t2, "!=")) function = 11;
+			else if (!strcmp(t2, "==")) function = 12;
+			else if (!strcmp(t2, "<")) function = 13;
+			else if (!strcmp(t2, "<=")) function = 14;
+			else if (!strcmp(t2, ">")) function = 15;
+			else if (!strcmp(t2, ">=")) function = 16;
+			else if (!strcmp(t2, "RAND")) function = 17;
+			else if (!strcmp(t2, "PIXEL")) function = 18;
+			else if (!strcmp(t2, "INGROUP")) function = 19;
+			else if (!strcmp(t2, "MIN")) function = 20;
+			else if (!strcmp(t2, "MAX")) function = 21;
+			else if (!strcmp(t2, "^")) function = 22;
 			else {
 				ok = false;
 				delete[] t2;

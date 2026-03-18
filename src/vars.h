@@ -49,7 +49,7 @@ extern Var* debugvar;
 inline void addparams(int* params) {
 	if (debugparameter->value && params) {
 		char tmp[512];
-		sprintf(tmp, "setting parameters: %i %i %i %i %i %i %i %i %i %i",
+		snprintf(tmp, sizeof(tmp), "setting parameters: %i %i %i %i %i %i %i %i %i %i",
 			params[0], params[1], params[2], params[3], params[4], params[5], params[6], params[7], params[8], params[9]);
 		std::cout << tmp << std::endl;
 	}
@@ -69,13 +69,13 @@ inline void removeparams(bool del = true) {
 #endif
 		return;
 	}
-	if (del)
-		delete (parameters[parameterpos]);
+	int* param = parameters[parameterpos];
+	if (del) delete (param);
 	parameters[parameterpos--] = 0;
-	if (debugparameter->value && parameters[parameterpos]) {
+	if (debugparameter->value && param) {
 		char tmp[512];
-		sprintf(tmp, "removing parameters to: %i %i %i %i %i %i %i %i %i %i",
-			parameters[parameterpos][0], parameters[parameterpos][1], parameters[parameterpos][2], parameters[parameterpos][3], parameters[parameterpos][4], parameters[parameterpos][5], parameters[parameterpos][6], parameters[parameterpos][7], parameters[parameterpos][8], parameters[parameterpos][9]);
+		snprintf(tmp, sizeof(tmp), "removing parameters to: %i %i %i %i %i %i %i %i %i %i",
+			param[0], param[1], param[2], param[3], param[4], param[5], param[6], param[7], param[8], param[9]);
 		std::cout << tmp << std::endl;
 	}
 }
