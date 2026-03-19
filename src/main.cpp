@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 
 	initmenu(screen);
 
-	setVar("BSVERSION", 1);
+	setVar("BSVERSION", 2);
 	setVar("BSNIGHTLY", 1);
 	setVar("MODDED", 1);
 	SDL_WM_SetCaption(TITLE_GAME, "");
