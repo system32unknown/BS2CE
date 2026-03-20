@@ -22,10 +22,8 @@ void replaceall(char* c, char* search, char replace, char fill = ' ') {
 	while (pos = strstr(c, search)) {
 		*pos = replace;
 		char* t;
-		for (t = pos + 1; t < end; t++)
-			*t = *(t + len);
-		for (int i = 0; i < len; i++)
-			*(t++) = fill;
+		for (t = pos + 1; t < end; t++) *t = *(t + len);
+		for (int i = 0; i < len; i++) *(t++) = fill;
 	}
 }
 
@@ -49,8 +47,8 @@ void replacehtmlstrings(char* c) {
 	replaceall(c, "&quot;", '"');
 	replaceall(c, "&#58;", ':');
 	replaceall(c, "&#46;", '.');
+	replaceall(c, "<br/>", '\n');
 	replaceall(c, "<br>", '\n');
-	replaceall(c, "<br />", '\n');
 }
 
 static const char* const BLOCKED_SUBSTRINGS[] = {
@@ -60,7 +58,10 @@ static const char* const BLOCKED_EXACT[] = {
 	"start", "start.bat", nullptr
 };
 
-struct PercentEncoding { const char* token; char value; };
+struct PercentEncoding {
+	const char* token;
+	char value;
+};
 static const PercentEncoding PERCENT_ENCODINGS[] = {
 	{"%20", 0x20}, {"%26", 0x26}, {"%27", 0x27},
 	{"%28", 0x28}, {"%29", 0x29}, {"%2A", 0x2A},
@@ -483,342 +484,338 @@ int parseline(char* text, int linenum, int owner, char* filename) {
 }
 
 Action* parseaction(Token* tokens, int owner) {
-	static Var* autoexec = (Var*)setVar("AUTOEXEC", 0);
+	static Var* autoexec = reinterpret_cast<Var*>(setVar("AUTOEXEC", 0));
 	static int buttonid = 1000;
+
 	char* function = tokens->getToken();
-	Action* action = NULL;
-	if ((function == NULL) || (!strcmp(function, "//")) || (function[0] == '<')) {
+
+	if (!function || !strcmp(function, "//") || function[0] == '<')
 		return new Action;
-	}
-	if ((function[0] == '+') || (function[0] == '-') || (function[0] == '<') || (function[0] == '>') || (function[0] == '.') || (function[0] == ',') || (function[0] == '[') || (function[0] == ']')) {
+
+	if (function[0] == '+' || function[0] == '-' || function[0] == '<' || function[0] == '>' || function[0] == '.' || function[0] == ',' || function[0] == '[' || function[0] == ']') {
 		char* out = bf_exec(tokens->text);
 		secretcode++;
 		parsechar(out, owner, "Brainfuck");
 		secretcode--;
-		delete out;
-		action = new Action;
+		delete[] out;
+		return new Action;
 	}
+	Action* action = nullptr;
+
 	if (!strcmp(function, "}")) {
-		if (drawobjectaction) {
-			drawobjectaction = 0;
-		}
-		if (triggerstack.size()) {
-			delete (triggerstack.top());
+		if (drawobjectaction) drawobjectaction = nullptr;
+		if (!triggerstack.empty()) {
+			delete[] triggerstack.top();
 			triggerstack.pop();
 		}
 		if (ifaction) {
 			char* t1 = tokens->getToken();
 			char* t2 = tokens->getToken();
+
+
 			if (t1 && t2 && !strcmp(t1, "ELSE")) {
-				((ActionIf*)ifaction)->elsetrigger = parseTrigger(t2, owner);
-				action = new Action();
+				reinterpret_cast<ActionIf*>(ifaction)->elsetrigger = parseTrigger(t2, owner);
+				action = new Action;
 			}
 		}
-		ifaction = 0;
+		ifaction = nullptr;
 	} else if (drawobjectaction) {
-		char* data = new char[strlen(function) + 1];
-		for (unsigned int i = 0; i < strlen(function); i++)
-			if ((unsigned char)function[i] > 127) {
-				char* tmp = new char[512];
-				sprintf(tmp, "Found forbidden character \"%c\" in object. Ignoring line.", function[i]);
+		const size_t flen = strlen(function);
+		for (size_t i = 0; i < flen; i++) {
+			if (static_cast<unsigned char>(function[i]) > 127) {
+				const size_t len = flen + 512;
+				char* tmp = new char[len];
+				snprintf(tmp, len, "Found forbidden character \"%c\" in object. Ignoring line.", function[i]);
 				error(tmp, owner);
-				delete (tmp);
-				delete (function);
-				return 0;
+				delete[] tmp;
+				delete[] function;
+				return nullptr;
 			}
+		}
+
+		char* data = new char[flen + 1];
 		strcpy(data, function);
-		((ActionDrawObject*)drawobjectaction)->data.push_back(data);
-	} else if ((function[0] == '!') && (strlen(function) > 2)) {
+		reinterpret_cast<ActionDrawObject*>(drawobjectaction)->data.push_back(data);
+	} else if (function[0] == '!' && strlen(function) > 2) {
 		parseenc(function + 1, owner, "Encrypted");
 		action = new Action;
-	} else if (!strcmp(function, "BS2CE")) {
+	} else if (!strcmp(function, "BS2CE") || !strcmp(function, "ERROR")) {
 		action = new Action;
-	} else if (!strcmp(function, "ERROR")) {
-		action = new Action;
-		char* t = tokens->getRest();
-		if (t) {
-			char* tmp = new char[strlen(t) + 512];
-			sprintf(tmp, "ERROR from %i: %s", owner, t);
-			error(tmp, 0);
-			delete (tmp);
+		if (!strcmp(function, "ERROR")) {
+			char* t = tokens->getRest();
+			if (t) {
+				const size_t len = strlen(t) + 512;
+				char* tmp = new char[len];
+				snprintf(tmp, len, "ERROR from %i: %s", owner, t);
+				error(tmp, 0);
+				delete[] tmp;
+			}
 		}
 	} else if (!strcmp(function, "TRIGGER")) {
 		char* triggername = tokens->getToken();
 		char* tmp = tokens->getToken();
-		char* extend = 0;
+		char* extend = nullptr;
+
 		if (tmp && !strcmp(tmp, "EXTENDS")) {
 			extend = tokens->getToken();
-			delete (tmp);
+			delete[] tmp;
 			tmp = tokens->getToken();
 		}
+
 		if (triggername && tmp && !strcmp(tmp, "{")) {
 			action = new ActionRemoveTrigger;
-			((ActionRemoveTrigger*)action)->trigger = triggername;
+			reinterpret_cast<ActionRemoveTrigger*>(action)->trigger = triggername;
 			action->exec();
+
 			if (extend) {
 				Trigger* oldtrigger = findTrigger(extend, owner);
-
-				std::list<Action*>::iterator it = oldtrigger->actions.begin();
-				while (it != oldtrigger->actions.end()) {
-					addAction(triggername, *it, owner);
-					it++;
-				}
+				for (auto* a : oldtrigger->actions) addAction(triggername, a, owner);
 			}
+
 			action = new ActionTrigger;
-			((ActionTrigger*)action)->triggername = 0;
+			reinterpret_cast<ActionTrigger*>(action)->triggername = nullptr;
 			triggerstack.push(triggername);
 		}
 	} else if (!strcmp(function, "ON")) {
 		char* triggername = tokens->getToken();
 		if (triggername) {
-			action = new ActionTrigger;
-			((ActionTrigger*)action)->triggername = triggername;
-			((ActionTrigger*)action)->action = parseaction(tokens, owner);
-			if (!((ActionTrigger*)action)->action) {
-				delete (action);
-				action = NULL;
-			}
+			auto* a = new ActionTrigger;
+			a->triggername = triggername;
+			a->action = parseaction(tokens, owner);
+			if (!a->action) delete a;
+			else action = a;
 		}
 	} else if (!strcmp(function, "SAVE")) {
 		char* screenname = tokens->getToken();
 		char* filename = tokens->getToken();
 		char* id = tokens->getToken();
-		int screenid = -1;
-		if (filename == 0) {
+
+		if (!filename) {
 			filename = new char[1];
-			*filename = 0;
+			*filename = '\0';
 		}
+
+		int screenid = -1;
 		if (screenname && checkfile(filename)) {
-			if (!strcmp(screenname, "ALL"))
-				screenid = ACTION_SAVE_SCREEN_ALL;
-			else if (!strcmp(screenname, "SAND"))
-				screenid = ACTION_SAVE_SCREEN_SAND;
-			else if (!strcmp(screenname, "QUICKSAND"))
-				screenid = ACTION_QUICKSAVE_SCREEN_SAND;
-			else if (!strcmp(screenname, "STAMP"))
-				screenid = ACTION_SAVE_STAMP;
-			else if (!strcmp(screenname, "VAR"))
-				screenid = ACTION_SAVE_VAR;
-			else if (!strcmp(screenname, "TIMERS"))
-				screenid = ACTION_SAVE_TIMERS;
-			delete (screenname);
+			if (!strcmp(screenname, "ALL"))      screenid = ACTION_SAVE_SCREEN_ALL;
+			else if (!strcmp(screenname, "SAND"))     screenid = ACTION_SAVE_SCREEN_SAND;
+			else if (!strcmp(screenname, "QUICKSAND"))screenid = ACTION_QUICKSAVE_SCREEN_SAND;
+			else if (!strcmp(screenname, "STAMP"))    screenid = ACTION_SAVE_STAMP;
+			else if (!strcmp(screenname, "VAR"))      screenid = ACTION_SAVE_VAR;
+			else if (!strcmp(screenname, "TIMERS"))   screenid = ACTION_SAVE_TIMERS;
+			delete[] screenname;
 		}
-		if ((screenid != -1) && (filename || (screenid == ACTION_SAVE_TIMERS))) {
-			action = new ActionSave;
-			if (screenid == ACTION_QUICKSAVE_SCREEN_SAND)
-				((ActionSave*)action)->filename = (char*)(new Varint(filename));
-			else
-				((ActionSave*)action)->filename = filename;
-			((ActionSave*)action)->screenid = screenid;
-			((ActionSave*)action)->id = new Varint(id);
+
+		if (screenid != -1 && (filename || screenid == ACTION_SAVE_TIMERS)) {
+			auto* a = new ActionSave;
+			a->screenid = screenid;
+			a->filename = (screenid == ACTION_QUICKSAVE_SCREEN_SAND) ? reinterpret_cast<char*>(new Varint(filename)) : filename;
+			a->id = new Varint(id);
+			action = a;
 		}
 	} else if (!strcmp(function, "LOAD")) {
 		char* screenname = tokens->getToken();
 		char* filename = tokens->getToken();
 		char* id = tokens->getToken();
+
 		int screenid = -1;
 		if (screenname && checkfile(filename)) {
-			if (!strcmp(screenname, "ALL"))
-				screenid = ACTION_SAVE_SCREEN_ALL;
-			else if (!strcmp(screenname, "SAND"))
-				screenid = ACTION_SAVE_SCREEN_SAND;
-			else if (!strcmp(screenname, "QUICKSAND"))
-				screenid = ACTION_QUICKSAVE_SCREEN_SAND;
-			else if (!strcmp(screenname, "STAMP"))
-				screenid = ACTION_SAVE_STAMP;
-			else if (!strcmp(screenname, "FGLAYER"))
-				screenid = ACTION_SAVE_FGLAYER;
-			else if (!strcmp(screenname, "BGLAYER"))
-				screenid = ACTION_SAVE_BGLAYER;
-			else if (!strcmp(screenname, "FONT"))
-				screenid = ACTION_SAVE_FONT;
-			else if (!strcmp(screenname, "MENUFONT"))
-				screenid = ACTION_SAVE_MENUFONT;
-			delete (screenname);
+			if (!strcmp(screenname, "ALL"))      screenid = ACTION_SAVE_SCREEN_ALL;
+			else if (!strcmp(screenname, "SAND"))     screenid = ACTION_SAVE_SCREEN_SAND;
+			else if (!strcmp(screenname, "QUICKSAND"))screenid = ACTION_QUICKSAVE_SCREEN_SAND;
+			else if (!strcmp(screenname, "STAMP"))    screenid = ACTION_SAVE_STAMP;
+			else if (!strcmp(screenname, "FGLAYER"))  screenid = ACTION_SAVE_FGLAYER;
+			else if (!strcmp(screenname, "BGLAYER"))  screenid = ACTION_SAVE_BGLAYER;
+			else if (!strcmp(screenname, "FONT"))     screenid = ACTION_SAVE_FONT;
+			else if (!strcmp(screenname, "MENUFONT")) screenid = ACTION_SAVE_MENUFONT;
+			delete[] screenname;
 		}
-		if ((screenid != -1) && filename) {
-			action = new ActionLoad;
-			if (screenid == ACTION_QUICKSAVE_SCREEN_SAND)
-				((ActionLoad*)action)->filename = (char*)(new Varint(filename));
-			else
-				((ActionLoad*)action)->filename = filename;
-			((ActionLoad*)action)->screenid = screenid;
-			((ActionLoad*)action)->id = new Varint(id);
+
+		if (screenid != -1 && filename) {
+			auto* a = new ActionLoad;
+			a->screenid = screenid;
+			a->filename = (screenid == ACTION_QUICKSAVE_SCREEN_SAND) ? reinterpret_cast<char*>(new Varint(filename)) : filename;
+			a->id = new Varint(id);
+			action = a;
 		}
 	} else if (!strcmp(function, "RETURN")) {
-		Varint* v = new Varint(tokens->getToken());
-		if (v->ok && (tokens->getToken() == NULL)) {
-			action = new ActionReturn();
-			((ActionReturn*)action)->var = v;
-		}
+		auto* v = new Varint(tokens->getToken());
+		if (v->ok && !tokens->getToken()) {
+			auto* a = new ActionReturn;
+			a->var = v;
+			action = a;
+		} else delete v;
 	} else if (!strcmp(function, "EXIT")) {
-		if (tokens->getToken() == NULL) {
-			action = new ActionExit();
-		}
+		if (!tokens->getToken()) action = new ActionExit;
 	} else if (!strcmp(function, "RESTART")) {
 		char* t = tokens->getToken();
-		if (tokens->getToken() == NULL) {
-			action = new ActionRestart();
-			((ActionRestart*)action)->parameter = t;
+		if (!tokens->getToken()) {
+			auto* a = new ActionRestart;
+			a->parameter = t;
+			action = a;
 		}
 	} else if (!strcmp(function, "TIMER")) {
 		char* t = tokens->getToken();
-		if (!strcmp(t, "CLEAR") && (tokens->getToken() == NULL)) {
-			action = new ActionClearTimer;
-			((ActionClearTimer*)action)->trigger = 0;
-		}
-		if (!strcmp(t, "REMOVE") || !strcmp(t, "REMOVEALL")) {
-			char* trigger = tokens->getToken();
-			if (trigger && (tokens->getToken() == NULL)) {
-				action = new ActionClearTimer;
-				((ActionClearTimer*)action)->trigger = parseTrigger(trigger, owner);
-				((ActionClearTimer*)action)->removeall = !strcmp(t, "REMOVEALL");
+		if (!strcmp(t, "CLEAR") && !tokens->getToken()) {
+			auto* a = new ActionClearTimer;
+			a->trigger = nullptr;
+			action = a;
+		} else if (!strcmp(t, "REMOVE") || !strcmp(t, "REMOVEALL")) {
+			char* trigname = tokens->getToken();
+			if (trigname && !tokens->getToken()) {
+				auto* a = new ActionClearTimer;
+				a->trigger = parseTrigger(trigname, owner);
+				a->removeall = !strcmp(t, "REMOVEALL");
+				action = a;
 			}
 		} else {
-			Varint* value = new Varint(t);
+			auto* value = new Varint(t);
 			char* what = tokens->getToken();
-			char* trigger = tokens->getToken();
+			char* trigname = tokens->getToken();
 			Varint** param = getParameters(tokens);
+
 			int type = -1;
 			if (what) {
-				if (!strcmp(what, "FRAMES"))
-					type = ACTION_TIMER_FRAMES;
-				else if (!strcmp(what, "SEK"))
-					type = ACTION_TIMER_SEC;
-				else if (!strcmp(what, "MSEK"))
-					type = ACTION_TIMER_MSEC;
-				delete (what);
+				if (!strcmp(what, "FRAMES")) type = ACTION_TIMER_FRAMES;
+				else if (!strcmp(what, "SEK")) type = ACTION_TIMER_SEC;
+				else if (!strcmp(what, "MSEK")) type = ACTION_TIMER_MSEC;
+				delete[] what;
 			}
-			Trigger* t = parseTrigger(trigger, owner);
-			if (trigger && t && value->ok && (tokens->getToken() == NULL)) {
-				action = new ActionTimer;
-				((ActionTimer*)action)->value = value;
-				((ActionTimer*)action)->type = type;
-				((ActionTimer*)action)->trigger = t;
-				((ActionTimer*)action)->params = param;
+
+			Trigger* trig = parseTrigger(trigname, owner);
+			if (trigname && trig && value->ok && !tokens->getToken()) {
+				auto* a = new ActionTimer;
+				a->value = value;
+				a->type = type;
+				a->trigger = trig;
+				a->params = param;
+				action = a;
+			} else {
+				delete value;
+				deleteparams(param);
 			}
 		}
 	} else if (!strcmp(function, "ELEMENT") || !strcmp(function, "Element")) {
 		char* element_name = tokens->getToken();
 		char* attribut = tokens->getToken();
-		if (!strcmp(attribut, "DIE")) {
+
+		if (attribut && !strcmp(attribut, "DIE")) {
 			char* dieto = tokens->getToken();
-			Varint* rate = new Varint(tokens->getToken());
-			if ((!tokens->getToken()) && dieto && rate->ok) {
-				action = new ActionElementDie;
-				((ActionElementDie*)action)->elementname = element_name;
-				((ActionElementDie*)action)->dieto = dieto;
-				((ActionElementDie*)action)->rate = rate;
-			}
+			auto* rate = new Varint(tokens->getToken());
+			if (!tokens->getToken() && dieto && rate->ok) {
+				auto* a = new ActionElementDie;
+				a->elementname = element_name;
+				a->dieto = dieto;
+				a->rate = rate;
+				action = a;
+			} else delete rate;
 		} else {
-			Varint* rvalue = new Varint(tokens->getToken(), 255);
-			Varint* gvalue = new Varint(tokens->getToken(), 255);
-			Varint* bvalue = new Varint(tokens->getToken(), 255);
-			Varint* weight = new Varint(tokens->getToken(), 1000);
-			if (!weight->ok)
-				weight = new Varint(0);
-			Varint* spay = new Varint(tokens->getToken(), 100);
-			if (!spay->ok)
-				spay = new Varint(1);
-			Varint* slide = new Varint(tokens->getToken(), 100);
-			if (!slide->ok)
-				slide = new Varint(1);
-			Varint* viscousity = new Varint(tokens->getToken(), 100);
-			if (!viscousity->ok)
-				viscousity = new Varint(1);
-			Varint* dierate = new Varint(tokens->getToken(), 32768);
-			if (!dierate->ok)
-				dierate = new Varint(0);
+			auto* rvalue = new Varint(tokens->getToken(), 255);
+			auto* gvalue = new Varint(tokens->getToken(), 255);
+			auto* bvalue = new Varint(tokens->getToken(), 255);
+			auto* weight = new Varint(tokens->getToken(), 1000);
+			if (!weight->ok) { delete weight;    weight = new Varint(0); }
+			auto* spay = new Varint(tokens->getToken(), 100);
+			if (!spay->ok) { delete spay;      spay = new Varint(1); }
+			auto* slide = new Varint(tokens->getToken(), 100);
+			if (!slide->ok) { delete slide;     slide = new Varint(1); }
+			auto* viscousity = new Varint(tokens->getToken(), 100);
+			if (!viscousity->ok) { delete viscousity; viscousity = new Varint(1); }
+			auto* dierate = new Varint(tokens->getToken(), 32768);
+			if (!dierate->ok) { delete dierate;   dierate = new Varint(0); }
+
 			char* dieto = tokens->getToken();
-			Varint* menuorder = new Varint(tokens->getToken());
-			if (!menuorder->ok)
-				menuorder = new Varint(0);
+			auto* menuorder = new Varint(tokens->getToken());
+			if (!menuorder->ok) { delete menuorder; menuorder = new Varint(0); }
+
 			char* tmp = tokens->getToken();
 			char* tmp2 = tokens->getToken();
-			Pic* icon = 0;
+			Pic* icon = nullptr;
+
 			if (tmp && tmp2) {
 				checkfile(tmp2);
 				icon = getPic(tmp, tmp2);
 				if (!strcmp(icon->type, "HEX")) {
-					icon->r = (void*)(new Varint(tokens->getToken(), 255));
-					icon->g = (void*)(new Varint(tokens->getToken(), 255));
-					icon->b = (void*)(new Varint(tokens->getToken(), 255));
+					icon->r = reinterpret_cast<void*>(new Varint(tokens->getToken(), 255));
+					icon->g = reinterpret_cast<void*>(new Varint(tokens->getToken(), 255));
+					icon->b = reinterpret_cast<void*>(new Varint(tokens->getToken(), 255));
 				}
-			} else {
-				icon = getPic("TEXT", attribut);
-			}
-			if ((!tokens->getToken()) && rvalue->ok && gvalue->ok && bvalue->ok && weight->ok && spay->ok && slide->ok && viscousity->ok && dierate->ok && slide->ok && icon) {
-				action = new ActionElementBS1;
-				((ActionElementBS1*)action)->elementname = attribut;
-				((ActionElementBS1*)action)->group = element_name;
-				((ActionElementBS1*)action)->dieto = dieto;
-				((ActionElementBS1*)action)->dierate = dierate;
-				((ActionElementBS1*)action)->icon = icon;
-				((ActionElementBS1*)action)->rvalue = rvalue;
-				((ActionElementBS1*)action)->gvalue = gvalue;
-				((ActionElementBS1*)action)->bvalue = bvalue;
-				((ActionElementBS1*)action)->weight = weight;
-				((ActionElementBS1*)action)->spay = spay;
-				((ActionElementBS1*)action)->slide = slide;
-				((ActionElementBS1*)action)->viscousity = viscousity;
-				((ActionElementBS1*)action)->menuorder = menuorder;
+			} else icon = getPic("TEXT", attribut);
+
+			if (!tokens->getToken() && rvalue->ok && gvalue->ok && bvalue->ok && weight->ok && spay->ok && slide->ok && viscousity->ok && dierate->ok && icon) {
+				auto* a = new ActionElementBS1;
+				a->elementname = attribut;
+				a->group = element_name;
+				a->dieto = dieto;
+				a->dierate = dierate;
+				a->icon = icon;
+				a->rvalue = rvalue;
+				a->gvalue = gvalue;
+				a->bvalue = bvalue;
+				a->weight = weight;
+				a->spay = spay;
+				a->slide = slide;
+				a->viscousity = viscousity;
+				a->menuorder = menuorder;
+				action = a;
 			}
 		}
 	} else if (!strcmp(function, "INTERACTION") || !strcmp(function, "Interaction") || !strcmp(function, "INTERACTIONAT") || !strcmp(function, "InteractionAt")) {
-		Varint* at;
-		if (!strcmp(function, "INTERACTIONAT") || !strcmp(function, "InteractionAt"))
-			at = new Varint(tokens->getToken());
-		else
-			at = new Varint(-1);
+		auto* at = (!strcmp(function, "INTERACTIONAT") || !strcmp(function, "InteractionAt")) ? new Varint(tokens->getToken()) : new Varint(-1);
+
 		char* element1 = tokens->getToken();
 		char* element2 = tokens->getToken();
 		if (element1 && element2) {
-			action = new ActionInteraction;
-			((ActionInteraction*)action)->elements1.push_back(element1);
-			((ActionInteraction*)action)->elements2.push_back(element2);
+			auto* a = new ActionInteraction;
+			a->elements1.push_back(element1);
+			a->elements2.push_back(element2);
+			a->at = at;
+
 			char* toself = tokens->getToken();
 			char* toother = tokens->getToken();
 			char* r = tokens->getToken();
 			while (toself && toother && r) {
-				((ActionInteraction*)action)->toselfs.push_back(toself);
-				((ActionInteraction*)action)->toothers.push_back(toother);
-				((ActionInteraction*)action)->rates.push_back(new Varint(r, 32768));
+				a->toselfs.push_back(toself);
+				a->toothers.push_back(toother);
+				a->rates.push_back(new Varint(r, 32768));
 				toself = tokens->getToken();
 				toother = tokens->getToken();
 				r = tokens->getToken();
 			}
-			((ActionInteraction*)action)->except = toself;
-			((ActionInteraction*)action)->at = at;
-		}
+
+			a->except = toself;
+			action = a;
+		} else delete at;
+
 	} else if (!strcmp(function, "INTERACTIONTRIGGER") || !strcmp(function, "InteractionTrigger") || !strcmp(function, "INTERACTIONTRIGGERAT") || !strcmp(function, "InteractionTriggerAt")) {
-		Varint* at;
-		if (!strcmp(function, "INTERACTIONTRIGGERAT") || !strcmp(function, "InteractionTriggerAt"))
-			at = new Varint(tokens->getToken());
-		else
-			at = new Varint(-1);
+		auto* at = (!strcmp(function, "INTERACTIONTRIGGERAT") || !strcmp(function, "InteractionTriggerAt")) ? new Varint(tokens->getToken()) : new Varint(-1);
+
 		char* element1 = tokens->getToken();
 		char* element2 = tokens->getToken();
 		if (element1 && element2) {
-			action = new ActionInteraction;
-			((ActionInteraction*)action)->elements1.push_back(element1);
-			((ActionInteraction*)action)->elements2.push_back(element2);
-			char* trigger = tokens->getToken();
+			auto* a = new ActionInteraction;
+			a->elements1.push_back(element1);
+			a->elements2.push_back(element2);
+			a->at = at;
+
+			char* trigname = tokens->getToken();
 			char* r = tokens->getToken();
-			while (trigger && r) {
-				((ActionInteraction*)action)->triggers.push_back(parseTrigger(trigger, owner));
-				((ActionInteraction*)action)->rates.push_back(new Varint(r, 32768));
-				trigger = tokens->getToken();
+			while (trigname && r) {
+				a->triggers.push_back(parseTrigger(trigname, owner));
+				a->rates.push_back(new Varint(r, 32768));
+				trigname = tokens->getToken();
 				r = tokens->getToken();
 			}
-			((ActionInteraction*)action)->except = trigger;
-			((ActionInteraction*)action)->at = at;
-		}
+			a->except = trigname;
+			action = a;
+		} else delete at;
 	} else if (!strcmp(function, "INTERACTIONCLEAR")) {
 		char* element = tokens->getToken();
-		if (element && (tokens->getToken() == NULL)) {
-			action = new ActionRemoveInteraction;
-			((ActionRemoveInteraction*)action)->element = element;
-			((ActionRemoveInteraction*)action)->index = NULL;
+		if (element && !tokens->getToken()) {
+			auto* a = new ActionRemoveInteraction;
+			a->element = element;
+			a->index = nullptr;
+			action = a;
 		}
 	} else if (!strcmp(function, "INTERACTIONREMOVE")) {
 		char* element = tokens->getToken();
@@ -896,12 +893,10 @@ Action* parseaction(Token* tokens, int owner) {
 					char* tmp2 = tokens->getToken();
 					Pic* icon;
 					if (tmp && tmp2) {
-						if (!strcmp(tmp, "FILE"))
-							checkfile(tmp2);
+						if (!strcmp(tmp, "FILE")) checkfile(tmp2);
 						icon = getPic(tmp, tmp2);
-					} else {
-						icon = getPic("", "");
-					}
+					} else icon = getPic("", "");
+
 					Varint* r = 0;
 					Varint* g = 0;
 					Varint* b = 0;
