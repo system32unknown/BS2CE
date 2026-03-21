@@ -1085,7 +1085,7 @@ Action* parseaction(Token* tokens, int owner) {
 		char* varname = tokens->getToken();
 		if (varname && !tokens->getToken()) {
 			char* t = new char[strlen(varname) + 1];
-			std::strcpy(t, varname);
+			strcpy(t, varname);
 			auto* a = new ActionInc;
 			a->var = varname;
 			a->value = new Varint(t);
@@ -1174,7 +1174,7 @@ Action* parseaction(Token* tokens, int owner) {
 		}
 	} else if (strstr(function, "http://") == function) {
 		char* filename = new char[strlen(function) + 1];
-		std::strcpy(filename, function);
+		strcpy(filename, function);
 		auto* a = new ActionInclude;
 		a->filename = filename;
 		a->param = nullptr;

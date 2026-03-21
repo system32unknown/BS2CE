@@ -16,11 +16,9 @@ jobs:
         shell: msys2 {0}
 
     steps:
-      # ── Checkout ────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@main
 
-      # ── Set up MSYS2 CLANG64 ────────────────────────────────────
       - name: Set up MSYS2
         uses: msys2/setup-msys2@v2
         with:
@@ -36,7 +34,6 @@ jobs:
             mingw-w64-clang-x86_64-zlib
             mingw-w64-clang-x86_64-libpng
 
-      # ── Configure ───────────────────────────────────────────────
       - name: Configure CMake
         run: |
           cmake -B build -S . \
@@ -46,11 +43,9 @@ jobs:
             -DCMAKE_CXX_COMPILER=clang++ \
             -DMSYS2_PREFIX=/clang64
 
-      # ── Build ───────────────────────────────────────────────────
       - name: Build
         run: cmake --build build --config Release
 
-      # ── Upload Artifact ─────────────────────────────────────────
       - name: Upload build artifact
         uses: actions/upload-artifact@main
         with:
@@ -63,11 +58,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ── Checkout ────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@main
 
-      # ── Install dependencies ─────────────────────────────────────
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -81,7 +74,6 @@ jobs:
             zlib1g-dev \
             libpng-dev
 
-      # ── Configure ───────────────────────────────────────────────
       - name: Configure CMake
         run: |
           cmake -B build -S . \
@@ -90,11 +82,9 @@ jobs:
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++
 
-      # ── Build ───────────────────────────────────────────────────
       - name: Build
         run: cmake --build build --config Release
 
-      # ── Upload Artifact ─────────────────────────────────────────
       - name: Upload build artifact
         uses: actions/upload-artifact@main
         with:
