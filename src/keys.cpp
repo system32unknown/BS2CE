@@ -1,15 +1,14 @@
 #include "trigger.h"
 #include "keys.h"
+#include <cstdio>
+#include <cstring>
 
 std::list<Key*> keys;
 
 void addkey(char* name, int keycode) {
-	std::list<Key*>::iterator it = keys.begin();
-	while (it != keys.end()) {
-		if ((*it)->code == keycode)
-			return;
-		it++;
-	}
+	for (auto* k : keys)
+		if (k->code == keycode) return;
+
 	Key* key = new Key();
 	key->code = keycode;
 	key->name = name;
@@ -17,13 +16,14 @@ void addkey(char* name, int keycode) {
 }
 
 void execkey(char* type, int keycode) {
-	char tmp[1024];
-	std::list<Key*>::iterator it = keys.begin();
-	while (it != keys.end()) {
-		if ((*it)->code == keycode) {
-			sprintf(tmp, "%s%s", type, (*it)->name);
+	const size_t typelen = strlen(type);
+	for (auto* k : keys) {
+		if (k->code == keycode) {
+			const size_t len = typelen + strlen(k->name) + 1;
+			char* tmp = new char[len];
+			snprintf(tmp, len, "%s%s", type, k->name);
 			findTrigger(tmp, 0)->exec();
+			delete[] tmp;
 		}
-		it++;
 	}
 }

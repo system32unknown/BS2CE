@@ -21,11 +21,9 @@ void quicksave(int slot) {
 
 	SDL_Surface* screen = getRealSandSurface();
 	if (!screen) return;
-	if (quicksaves[slot])
-		SDL_FreeSurface(quicksaves[slot]);
+	if (quicksaves[slot]) SDL_FreeSurface(quicksaves[slot]);
 	quicksaves[slot] = SDL_CreateRGBSurface(SDL_SWSURFACE, screen->w, screen->h, 16, 0, 0, 0, 0);
-	if (quicksaves[slot])
-		SDL_BlitSurface(screen, 0, quicksaves[slot], 0);
+	if (quicksaves[slot]) SDL_BlitSurface(screen, 0, quicksaves[slot], 0);
 }
 
 void quickload(int slot) {
@@ -147,7 +145,7 @@ int save(SDL_Surface* screen, char* filename) {
 			for (int x = 0; x < screen->w; x++) {
 				const Uint16 t = *((Uint16*)screen->pixels + y * screen->pitch / 2 + x);
 
-				row_pointers[y][x * 6 + 0] = elements[t].r;
+				row_pointers[y][x * 6] = elements[t].r;
 				row_pointers[y][x * 6 + 1] = static_cast<png_byte>(t & 0xFF);
 				row_pointers[y][x * 6 + 2] = elements[t].g;
 				row_pointers[y][x * 6 + 3] = static_cast<png_byte>((t & 0xFF00) >> 8);
@@ -175,84 +173,83 @@ int save(SDL_Surface* screen, char* filename) {
 }
 
 int load(char* filename) {
-	if ((strlen(filename) > 4) && ((!strcmp(filename + strlen(filename) - 4, ".bs2")) || (!strcmp(filename + strlen(filename) - 4, ".BS2")))) {
+	const size_t flen = strlen(filename);
+
+	auto endsWith = [&](const char* ext) {
+		const size_t elen = strlen(ext);
+		return (flen >= elen) && !strcmp(filename + flen - elen, ext);
+		};
+
+	if (endsWith(".bs2") || endsWith(".BS2")) {
 		parsefile(filename, 0);
 	}
-	if ((strlen(filename) > 4) && ((!strcmp(filename + strlen(filename) - 4, ".bmp")) || (!strcmp(filename + strlen(filename) - 4, ".BMP")))) {
+
+	if (endsWith(".bmp") || endsWith(".BMP")) {
 		SDL_Surface* ptmp = SDL_LoadBMP(checkfilename(filename));
 		if (!ptmp) return -1;
-		SDL_Surface* p = SDL_CreateRGBSurface(SDL_SWSURFACE, ptmp->w, ptmp->h, 24, 0, 0, 0, 0);
 
-		if (!p) {
-			SDL_FreeSurface(ptmp);
-			return -1;
-		}
-		SDL_BlitSurface(ptmp, 0, p, 0);
+		SDL_Surface* p = SDL_CreateRGBSurface(SDL_SWSURFACE, ptmp->w, ptmp->h, 24, 0, 0, 0, 0);
+		if (!p) { SDL_FreeSurface(ptmp); return -1; }
+
+		SDL_BlitSurface(ptmp, nullptr, p, nullptr);
 		SDL_FreeSurface(ptmp);
+
 		resize(p->w - 2, p->h - 2);
 		SDL_Surface* screen = getRealSandSurface();
 
 		if (screen) {
 			Element* elements = getElement(0);
-			Uint8 r, g, b;
-			Uint8* tp;
-			Uint16 max = getelementscount();
-			Uint16 t;
-			Uint32 dif, diftmp;
-			for (int y = 0; y < p->h; y++)
+			const Uint16 max = getelementscount();
+			const int pitch = p->pitch;
+
+			for (int y = 0; y < p->h; y++) {
 				for (int x = 0; x < p->w; x++) {
-					tp = ((Uint8*)p->pixels + y * p->pitch + x * 3);
-					b = *(tp + 0);
-					g = *(tp + 1);
-					r = *(tp + 2);
-					t = 0;
-					dif = 0xFFFFFFFF;
+					const Uint8* tp = static_cast<Uint8*>(p->pixels) + y * pitch + x * 3;
+					const Uint8 b = tp[0], g = tp[1], r = tp[2];
+
+					Uint16 t = 0;
+					Uint32 dif = 0xFFFFFFFF;
 					for (int i = 0; i < max; i++) {
-						int dr = (int)elements[i].r - (int)r;
-						int dg = (int)elements[i].g - (int)g;
-						int db = (int)elements[i].b - (int)b;
-						diftmp = (Uint32)(dr * dr + dg * dg + db * db);
+						const int dr = static_cast<int>(elements[i].r) - r;
+						const int dg = static_cast<int>(elements[i].g) - g;
+						const int db = static_cast<int>(elements[i].b) - b;
+						const Uint32 diftmp = static_cast<Uint32>(dr * dr + dg * dg + db * db);
 						if (diftmp < dif) {
 							dif = diftmp;
-							t = i;
-							if (!dif)
-								break;
+							t = static_cast<Uint16>(i);
+							if (!dif) break;
 						}
 					}
 
 					if (t == 1) t = 0;
-					*((Uint16*)screen->pixels + y * screen->pitch / 2 + x) = t;
+					*(static_cast<Uint16*>(screen->pixels) + y * screen->pitch / 2 + x) = t;
 				}
+			}
 		}
 		SDL_FreeSurface(p);
 	}
 
-	if ((strlen(filename) > 4) && ((!strcmp(filename + strlen(filename) - 4, ".png")) || (!strcmp(filename + strlen(filename) - 4, ".PNG")))) {
+	if (endsWith(".png") || endsWith(".PNG")) {
 #ifdef USE_PNG
-		char header[8];
-		png_structp png_ptr;
-		png_infop info_ptr;
-		png_bytep* row_pointers;
-
 		FILE* fp = fopen(checkfilename(filename), "rb");
 		if (!fp) return -1;
 
-		fread(header, 1, 8, fp);
+		char header[8];
+		if (fread(header, 1, 8, fp) != 8) { fclose(fp); return -1; }
 
-		png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-		if (!png_ptr) {
-			fclose(fp);
-			return -1;
-		}
-		info_ptr = png_create_info_struct(png_ptr);
+		png_structp png_ptr = png_create_read_struct(
+			PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+		if (!png_ptr) { fclose(fp); return -1; }
+
+		png_infop info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr) {
-			png_destroy_read_struct(&png_ptr, NULL, NULL);
+			png_destroy_read_struct(&png_ptr, nullptr, nullptr);
 			fclose(fp);
 			return -1;
 		}
 
 		if (setjmp(png_jmpbuf(png_ptr))) {
-			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+			png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
 			fclose(fp);
 			return -1;
 		}
@@ -261,42 +258,41 @@ int load(char* filename) {
 		png_set_sig_bytes(png_ptr, 8);
 		png_read_info(png_ptr, info_ptr);
 
-		png_uint_32 img_width = png_get_image_width(png_ptr, info_ptr);
-		png_uint_32 img_height = png_get_image_height(png_ptr, info_ptr);
-		png_size_t img_rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-		int img_bit_depth = png_get_bit_depth(png_ptr, info_ptr);
-		int img_channels = png_get_channels(png_ptr, info_ptr);
-		png_size_t pixel_bytes = (png_size_t)(img_bit_depth / 8) * img_channels;
+		const png_uint_32 img_width = png_get_image_width(png_ptr, info_ptr);
+		const png_uint_32 img_height = png_get_image_height(png_ptr, info_ptr);
+		const png_size_t  img_rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+		const int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+		const int channels = png_get_channels(png_ptr, info_ptr);
+		const png_size_t  pixel_bytes = static_cast<png_size_t>(bit_depth / 8) * channels;
 
-		resize((int)img_width - 2, (int)img_height - 2);
+		resize(static_cast<int>(img_width) - 2, static_cast<int>(img_height) - 2);
 		SDL_Surface* screen = getRealSandSurface();
 
-		row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * img_height);
+		png_bytep* row_pointers = static_cast<png_bytep*>( malloc(sizeof(png_bytep) * img_height));
 		if (!row_pointers) {
-			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+			png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
 			fclose(fp);
 			return -1;
 		}
 		for (png_uint_32 y = 0; y < img_height; y++)
-			row_pointers[y] = (png_byte*)malloc(img_rowbytes);
+			row_pointers[y] = static_cast<png_byte*>(malloc(img_rowbytes));
+
 		png_read_image(png_ptr, row_pointers);
 
 		if (screen) {
-			Uint16 t;
-			Uint16 max = getelementscount();
-			for (png_uint_32 y = 0; y < img_height; y++)
+			const Uint16 max = getelementscount();
+			for (png_uint_32 y = 0; y < img_height; y++) {
 				for (png_uint_32 x = 0; x < img_width; x++) {
-					t = row_pointers[y][x * pixel_bytes + 1] + row_pointers[y][x * pixel_bytes + 3] * 256;
-					if (t < max) *((Uint16*)screen->pixels + y * screen->pitch / 2 + x) = t;
+					const Uint16 t = static_cast<Uint16>(row_pointers[y][x * pixel_bytes + 1] + row_pointers[y][x * pixel_bytes + 3] * 256);
+					if (t < max) *(static_cast<Uint16*>(screen->pixels) + y * screen->pitch / 2 + x) = t;
 				}
+			}
 		}
 
-		fclose(fp);
-		for (png_uint_32 y = 0; y < img_height; y++)
-			free(row_pointers[y]);
+		for (png_uint_32 y = 0; y < img_height; y++) free(row_pointers[y]);
 		free(row_pointers);
-
-		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+		fclose(fp);
+		png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
 
 		recalccolors();
 		recalcused();

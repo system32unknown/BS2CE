@@ -2,8 +2,8 @@
 
 ## Bug Fixes
 - [ ] Fix sand physic simulation.
-- [ ] Fix LemmingSand 1.
-- [ ] Fix Memory
+- [x] Fix LemmingSand 1.
+- [ ] Fix Memory Leaks.
 
 ### Features
 

@@ -57,7 +57,10 @@ int updatethread(void*) {
 }
 
 int main(int argc, char* argv[]) {
-	SDL_Init(SDL_INIT_VIDEO);
+	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+		printf("Error: %s\n", SDL_GetError());
+		return 1;
+	}
 
 	bool showgui = true;
 	if (!isserver)
@@ -97,8 +100,7 @@ int main(int argc, char* argv[]) {
 	screensem = SDL_CreateSemaphore(1);
 
 	stamps = new SDL_Surface * [MAX_STAMPS * 2];
-	for (int i = 0; i < MAX_STAMPS * 2; i++)
-		stamps[i] = nullptr;
+	for (int i = 0; i < MAX_STAMPS * 2; i++) stamps[i] = nullptr;
 
 	debugparameter = reinterpret_cast<Var*>(setVar("DEBUGPARAMETER", 0));
 	debugvar = reinterpret_cast<Var*>(setVar("DEBUGVAR", 0));
@@ -208,7 +210,7 @@ int main(int argc, char* argv[]) {
 			if (!isserver) {
 				int sock = connect("localhost", 7777);
 				sendowner(argv[i], sock, strlen(argv[i]));
-				disconnect(sock);
+				disconnect();
 				exit(0);
 			}
 
@@ -351,9 +353,7 @@ int main(int argc, char* argv[]) {
 					if (keydown[kd] <= 1) {
 						execkey("KEYREPEAT_", kd);
 						keydown[kd] = static_cast<unsigned int>(keyrepeatrate->value);
-					} else {
-						keydown[kd]--;
-					}
+					} else keydown[kd]--;
 				}
 				break;
 			}
@@ -366,19 +366,16 @@ int main(int argc, char* argv[]) {
 			}
 
 			case SDL_MOUSEBUTTONDOWN:
-				if (keystate[rclickmod->value])
-					clickmenu(screen, event.button.x, event.button.y, 4, true);
-				else if (keystate[mclickmod->value])
-					clickmenu(screen, event.button.x, event.button.y, 2, true);
-				else
-					clickmenu(screen, event.button.x, event.button.y, SDL_GetMouseState(nullptr, nullptr), true);
+				if (event.button.button != SDL_BUTTON_WHEELUP && event.button.button != SDL_BUTTON_WHEELDOWN) {
+					if (keystate[rclickmod->value]) clickmenu(screen, event.button.x, event.button.y, 4, true);
+					else if (keystate[mclickmod->value]) clickmenu(screen, event.button.x, event.button.y, 2, true);
+					else clickmenu(screen, event.button.x, event.button.y, SDL_GetMouseState(nullptr, nullptr), true);
+				}
 				break;
 
 			case SDL_MOUSEBUTTONUP:
-				if (event.button.button == 4)
-					findTrigger("MOUSEWHEELUP", 0)->exec();
-				if (event.button.button == 5)
-					findTrigger("MOUSEWHEELDOWN", 0)->exec();
+				if (event.button.button == SDL_BUTTON_WHEELUP) findTrigger("MOUSEWHEELUP", 0)->exec();
+				if (event.button.button == SDL_BUTTON_WHEELDOWN) findTrigger("MOUSEWHEELDOWN", 0)->exec();
 				break;
 
 			case SDL_VIDEORESIZE: {

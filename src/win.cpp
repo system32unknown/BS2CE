@@ -15,7 +15,6 @@ void osinit(char* filename) {
 	path = new char[strlen(filename) + 1];
 	strcpy(path, filename);
 
-	// Find the last path separator to isolate the directory portion
 	char* tmp = nullptr;
 	char* tmp2 = path;
 	while ((tmp = strchr(tmp2, '/')) || (tmp = strchr(tmp2, '\\')))
@@ -128,20 +127,6 @@ void mousebuttonbug(bool mouseup) {
 	hwnd = GetActiveWindow();
 }
 
-int copyStringToClipboard(char* source) {
-	if (!OpenClipboard(nullptr)) return 0;
-	EmptyClipboard();
-	const size_t len = strlen(source) + 1;
-	HGLOBAL clipbuffer = GlobalAlloc(GMEM_DDESHARE, len);
-	if (!clipbuffer) { CloseClipboard(); return 0; }
-	char* buffer = static_cast<char*>(GlobalLock(clipbuffer));
-	strcpy(buffer, source);
-	GlobalUnlock(clipbuffer);
-	SetClipboardData(CF_TEXT, clipbuffer);
-	CloseClipboard();
-	return 0;
-}
-
 char* getStringFromClipboard() {
 	if (!OpenClipboard(nullptr)) return nullptr;
 	HANDLE hData = GetClipboardData(CF_TEXT);
@@ -210,10 +195,6 @@ void messagebox(char* text, char* title) {
 	mousebuttonbug(true);
 }
 
-char* inputbox() {
-	return nullptr;
-}
-
 #else
 
 void osinit(char* filename) {
@@ -235,10 +216,6 @@ void ossystem(char* cmd, char* parameters, bool wait, bool hidden) {
 }
 
 void mousebuttonbug(bool mouseup) {}
-
-int copyStringToClipboard(char* source) {
-	return 0;
-}
 
 char* getStringFromClipboard() {
 	char* buffer = new char[1];
@@ -263,11 +240,6 @@ bool yesnobox(char* text, char* title) {
 }
 
 void messagebox(char* text, char* title) {}
-
-char* inputbox() {
-	return nullptr;
-}
-
 #endif
 
 char* checkfilename(char* filename) {

@@ -86,7 +86,7 @@ SDL_Surface* Pic::getpic(int a) {
 		for (int ii = 0; ii < 256; ii++) {
 			unsigned char t = static_cast<unsigned char>(text[ii]) - 48;
 			if (t > 10) t -= 7;
-			*(bufp + ii * 4 + 0) = (t > 7) ? (t -= 8, c) : 0;
+			*(bufp + ii * 4) = (t > 7) ? (t -= 8, c) : 0;
 			*(bufp + ii * 4 + 1) = (t > 3) ? (t -= 4, c) : 0;
 			*(bufp + ii * 4 + 2) = (t > 1) ? (t -= 2, c) : 0;
 			*(bufp + ii * 4 + 3) = (t > 0) ? c : 0;

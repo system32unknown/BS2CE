@@ -611,7 +611,7 @@ int Varint::val() {
 
 	if (trigger) {
 		if (params) addparams(calcparams(params));
-		int i = (static_cast<Trigger*>(trigger))->exec();
+		int i = ((Trigger*)trigger)->exec();
 		if (params) removeparams();
 		setreturn = false;
 		return i;

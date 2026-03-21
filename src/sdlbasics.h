@@ -39,7 +39,6 @@
 
 #define MAX_STAMPS 100000
 
-void SDL_DrawPoint16(SDL_Surface* screen, int x, int y, Uint16 color);
 void SDL_DrawSavePoint16(SDL_Surface* screen, int x, int y, Uint16 color);
 void SDL_DrawLine16(SDL_Surface* screen, int x, int y, int dx, int dy, Uint16 color);
 void SDL_ReplaceLine16(SDL_Surface* screen, int x, int y, int dx, int dy, Uint16 color, Sint32 replace);

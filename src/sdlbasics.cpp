@@ -6,135 +6,103 @@
 static constexpr double BF_PI = 3.141592654;
 SDL_Surface** stamps = 0;
 
-void SDL_DrawPoint16(SDL_Surface* screen, int x, int y, Uint16 color) {
-	*((Uint16*)screen->pixels + y * screen->pitch / 2 + x) = color;
-}
-
 void SDL_DrawSavePoint16(SDL_Surface* screen, int x, int y, Uint16 color) {
-	if ((x >= 0) && (x < screen->w) && (y >= 0) && (y < screen->h))
-		*((Uint16*)screen->pixels + y * screen->pitch / 2 + x) = color;
+	if (x >= 0 && x < screen->w && y >= 0 && y < screen->h)
+		*(static_cast<Uint16*>(screen->pixels) + y * screen->pitch / 2 + x) = color;
 }
 
 void SDL_DrawLine16(SDL_Surface* screen, int x, int y, int dx, int dy, Uint16 color) {
-	int length;
-	if ((length = (int)sqrt((float)dx * dx + dy * dy)) == 0) {
-		if ((x >= 0) && (x < screen->w) && (y >= 0) && (y < screen->h))
-			*((Uint16*)screen->pixels + y * screen->pitch / 2 + x) = color;
+	const int length = static_cast<int>(sqrt(static_cast<float>(dx * dx + dy * dy)));
+	if (length == 0) {
+		SDL_DrawSavePoint16(screen, x, y, color);
 		return;
 	}
-	int tmpx, tmpy;
-	int w = screen->w;
-	int h = screen->h;
-	for (int i = 0; i <= length; i++)
-		if (((tmpx = x + dx * i / length) >= 0) && (tmpx < w) && ((tmpy = y + dy * i / length) >= 0) && (tmpy < h))
-			*((Uint16*)screen->pixels + (tmpy)*screen->pitch / 2 + tmpx) = color;
+	const int w = screen->w;
+	const int h = screen->h;
+	const int pitch = screen->pitch / 2;
+	Uint16* const pixels = static_cast<Uint16*>(screen->pixels);
+	for (int i = 0; i <= length; i++) {
+		const int tx = x + dx * i / length;
+		const int ty = y + dy * i / length;
+		if (tx >= 0 && tx < w && ty >= 0 && ty < h)
+			*(pixels + ty * pitch + tx) = color;
+	}
 }
 
 void SDL_ReplaceLine16(SDL_Surface* screen, int x, int y, int dx, int dy, Uint16 color, Sint32 replace) {
-	int length;
-	if ((length = (int)sqrt((float)dx * dx + dy * dy)) == 0) {
-		if ((x >= 0) && (x < screen->w) && (y >= 0) && (y < screen->h))
-			*((Uint16*)screen->pixels + y * screen->pitch / 2 + x) = color;
+	const int length = static_cast<int>(sqrt(static_cast<float>(dx * dx + dy * dy)));
+	if (length == 0) {
+		SDL_DrawSavePoint16(screen, x, y, color);
 		return;
 	}
-	int tmpx, tmpy;
-	int w = screen->w;
-	int h = screen->h;
-	int pitch = screen->pitch / 2;
-	Uint16* pixels = (Uint16*)screen->pixels;
 
-	Element* e = 0;
-	if (replace < 0)
-		e = getElement(0);
+	const int w = screen->w;
+	const int h = screen->h;
+	const int pitch = screen->pitch / 2;
+	Uint16* const pixels = static_cast<Uint16*>(screen->pixels);
+	const Element* const e = (replace < 0) ? getElement(0) : nullptr;
 
-	if (replace >= 0)
-		for (int i = 0; i <= length; i++)
-			if (((tmpx = x + dx * i / length) >= 0) && (tmpx < w) && ((tmpy = y + dy * i / length) >= 0) && (tmpy < h))
-				if (*(pixels + (tmpy)*pitch + tmpx) == replace)
-					*(pixels + (tmpy)*pitch + tmpx) = color;
-	if (replace == -1)
-		for (int i = 0; i <= length; i++)
-			if (((tmpx = x + dx * i / length) >= 0) && (tmpx < w) && ((tmpy = y + dy * i / length) >= 0) && (tmpy < h))
-				if ((e[*(pixels + (tmpy)*pitch + tmpx)].weight))
-					*(pixels + (tmpy)*pitch + tmpx) = color;
-	if (replace == -2)
-		for (int i = 0; i <= length; i++)
-			if (((tmpx = x + dx * i / length) >= 0) && (tmpx < w) && ((tmpy = y + dy * i / length) >= 0) && (tmpy < h))
-				if (!(e[*(pixels + (tmpy)*pitch + tmpx)].weight))
-					*(pixels + (tmpy)*pitch + tmpx) = color;
+	for (int i = 0; i <= length; i++) {
+		const int tx = x + dx * i / length;
+		const int ty = y + dy * i / length;
+		if (tx < 0 || tx >= w || ty < 0 || ty >= h) continue;
+		Uint16& px = *(pixels + ty * pitch + tx);
+		if (replace >= 0 && px == static_cast<Uint16>(replace)) px = color;
+		else if (replace == -1 && e[px].weight) px = color;
+		else if (replace == -2 && !e[px].weight) px = color;
+	}
 }
 
 void SDL_DrawRect16(SDL_Surface* screen, int x, int y, int dx, int dy, Uint16 color) {
-	int y2, x2;
-	if (dx < 0) {
-		dx = -dx;
-		x = x - dx;
-	}
-	if (dy < 0) {
-		dy = -dy;
-		y = y - dy;
-	}
-	int fromx = x;
-	if (x < 0)
-		fromx = 0;
-	if (x >= screen->w)
-		return;
-	int fromy = y;
-	if (y < 0)
-		fromy = 0;
-	if (y >= screen->h)
-		return;
-	int tox = x2 = x + dx;
-	if (x2 < 0)
-		return;
-	if (x2 >= screen->w)
-		tox = screen->w - 1;
-	int toy = y2 = y + dy;
-	if (y2 < 0)
-		return;
-	if (y2 >= screen->h)
-		toy = screen->h - 1;
-	Uint16* tmp = (Uint16*)screen->pixels + x;
-	if ((x >= 0) && screen->w > (x))
-		for (int i = fromy; i <= toy; i++) {
-			*(tmp + i * screen->pitch / 2) = color;
-		}
-	tmp = (Uint16*)screen->pixels + x2;
-	if ((x2 > 0) && screen->w > (x2))
-		for (int i = fromy; i <= toy; i++) {
-			*(tmp + i * screen->pitch / 2) = color;
-		}
-	tmp = (Uint16*)screen->pixels + y * screen->pitch / 2;
-	if ((y >= 0) && screen->h > (y))
-		for (int i = fromx; i < tox; i++) {
-			*(tmp + i) = color;
-		}
-	tmp = (Uint16*)screen->pixels + y2 * screen->pitch / 2;
-	if ((y2 > 0) && screen->h > (y2))
-		for (int i = fromx; i < tox; i++) {
-			*(tmp + i) = color;
-		}
+	if (dx < 0) { dx = -dx; x -= dx; }
+	if (dy < 0) { dy = -dy; y -= dy; }
+
+	const int x2 = x + dx;
+	const int y2 = y + dy;
+
+	if (x2 < 0 || x >= screen->w) return;
+	if (y2 < 0 || y >= screen->h) return;
+
+	const int fromx = (x < 0) ? 0 : x;
+	const int fromy = (y < 0) ? 0 : y;
+	const int tox = (x2 >= screen->w) ? screen->w - 1 : x2;
+	const int toy = (y2 >= screen->h) ? screen->h - 1 : y2;
+	const int pitch = screen->pitch / 2;
+
+	Uint16* pixels = static_cast<Uint16*>(screen->pixels);
+
+	if (x >= 0 && x < screen->w)
+		for (int i = fromy; i <= toy; i++)
+			*(pixels + i * pitch + x) = color;
+
+	if (x2 > 0 && x2 < screen->w)
+		for (int i = fromy; i <= toy; i++)
+			*(pixels + i * pitch + x2) = color;
+
+	if (y >= 0 && y < screen->h)
+		for (int i = fromx; i < tox; i++)
+			*(pixels + y * pitch + i) = color;
+
+	if (y2 > 0 && y2 < screen->h)
+		for (int i = fromx; i < tox; i++)
+			*(pixels + y2 * pitch + i) = color;
 }
 
 void SDL_DrawFilledRect16(SDL_Surface* screen, int x, int y, int dx, int dy, Uint16 color) {
-	if (!(dx * dy))
-		return;
-	SDL_Rect rect;
+	if (dx == 0 || dy == 0) return;
 
-	if (y < 0) {
-		dy += y;
-		y = 0;
-	}
-	if (y >= screen->h)
-		return;
-	if (y + dy >= screen->h)
-		dy = screen->h - y;
-	if (dy <= 0)
-		return;
-	rect.x = x;
-	rect.y = y;
-	rect.w = dx;
-	rect.h = dy;
+	if (x >= screen->w || y >= screen->h) return;
+	if (x + dx <= 0 || y + dy <= 0) return;
+
+	if (x < 0) { dx += x; x = 0; }
+	if (y < 0) { dy += y; y = 0; }
+	if (x + dx > screen->w) dx = screen->w - x;
+	if (y + dy > screen->h) dy = screen->h - y;
+
+	if (dx <= 0 || dy <= 0) return;
+
+	SDL_Rect rect = { static_cast<Sint16>(x),  static_cast<Sint16>(y),
+					  static_cast<Uint16>(dx), static_cast<Uint16>(dy) };
 	SDL_FillRect(screen, &rect, color);
 }
 
@@ -220,18 +188,15 @@ void SDL_ReplaceFilledCircle16(SDL_Surface* screen, int x, int y, int rx, int ry
 }
 
 void SDL_CopyRect16(SDL_Surface* screen, int x, int y, int dx, int dy, int tox, int toy) {
-	SDL_Rect srcrect, dstrect;
-	srcrect.x = x;
-	srcrect.y = y;
-	srcrect.w = dx;
-	srcrect.h = dy;
-	SDL_Surface* tmpsurface = SDL_CreateRGBSurface(SDL_SWSURFACE, dx, dy, 16, 0, 0, 0, 0);
-	SDL_BlitSurface(screen, &srcrect, tmpsurface, NULL);
-	dstrect.x = tox;
-	dstrect.y = toy;
-	SDL_BlitSurface(tmpsurface, 0, screen, &dstrect);
-	SDL_FreeSurface(tmpsurface);
-	return;
+	SDL_Rect srcrect = { static_cast<Sint16>(x),   static_cast<Sint16>(y),
+						 static_cast<Uint16>(dx),  static_cast<Uint16>(dy) };
+	SDL_Rect dstrect = { static_cast<Sint16>(tox), static_cast<Sint16>(toy), 0, 0 };
+
+	SDL_Surface* tmp = SDL_CreateRGBSurface(SDL_SWSURFACE, dx, dy, 16, 0, 0, 0, 0);
+	if (!tmp) return;
+	SDL_BlitSurface(screen, &srcrect, tmp, nullptr);
+	SDL_BlitSurface(tmp, nullptr, screen, &dstrect);
+	SDL_FreeSurface(tmp);
 }
 
 void SDL_DrawText16(SDL_Surface* screen, void* f, char* t, int x, int y, Uint16 color, int* width, int* height, int align) {
@@ -274,154 +239,175 @@ void SDL_DrawText16(SDL_Surface* screen, void* f, char* t, int x, int y, Uint16 
 }
 
 void SDL_Fill16(SDL_Surface* screen, int x, int y, Uint16 color) {
-	int replace = *((Uint16*)screen->pixels + y * screen->pitch / 2 + x);
-	std::stack<int> fillStackx;
-	std::stack<int> fillStacky;
-	fillStackx.push(x);
-	fillStacky.push(y);
-	int tx, ty;
-	int p = screen->pitch / 2;
-	int width = screen->w - 1;
-	int height = screen->h - 1;
-	while (!fillStackx.empty()) {
-		tx = fillStackx.top();
-		ty = fillStacky.top();
-		fillStackx.pop();
-		fillStacky.pop();
-		if (*((Uint16*)screen->pixels + ty * p + tx) != color) {
-			if ((tx < width) && (*((Uint16*)screen->pixels + ty * p + tx + 1) == replace)) {
-				fillStackx.push(tx + 1);
-				fillStacky.push(ty);
-			}
-			if ((tx > 0) && (*((Uint16*)screen->pixels + ty * p + tx - 1) == replace)) {
-				fillStackx.push(tx - 1);
-				fillStacky.push(ty);
-			}
-			if ((ty < height) && (*((Uint16*)screen->pixels + (ty + 1) * p + tx) == replace)) {
-				fillStackx.push(tx);
-				fillStacky.push(ty + 1);
-			}
-			if ((ty > 0) && (*((Uint16*)screen->pixels + (ty - 1) * p + tx) == replace)) {
-				fillStackx.push(tx);
-				fillStacky.push(ty - 1);
-			}
-			*((Uint16*)screen->pixels + ty * p + tx) = color;
-		}
+	if (x < 0 || x >= screen->w || y < 0 || y >= screen->h) return;
+
+	const int p = screen->pitch / 2;
+	Uint16* const base = static_cast<Uint16*>(screen->pixels);
+	const Uint16  replace = *(base + y * p + x);
+
+	if (replace == color) return;
+
+	const int width = screen->w - 1;
+	const int height = screen->h - 1;
+
+	std::stack<std::pair<int, int>> fillStack;
+	fillStack.push({ x, y });
+
+	while (!fillStack.empty()) {
+		auto [tx, ty] = fillStack.top();
+		fillStack.pop();
+
+		Uint16* px = base + ty * p + tx;
+		if (*px == color) continue;
+		if (*px != replace) continue;
+		*px = color;
+
+		if (tx < width && *(px + 1) == replace) fillStack.push({ tx + 1, ty });
+		if (tx > 0 && *(px - 1) == replace) fillStack.push({ tx - 1, ty });
+		if (ty < height && *(px + p) == replace) fillStack.push({ tx, ty + 1 });
+		if (ty > 0 && *(px - p) == replace) fillStack.push({ tx, ty - 1 });
 	}
 }
 
 void SDL_RotateRect16(SDL_Surface* screen, int x, int y, int dx, int dy, int direction) {
-	if ((dx <= 0) || (dy <= 0))
-		return;
+	if (dx <= 0 || dy <= 0) return;
+
+	const int absd = std::abs(direction);
+
 	SDL_Rect rect;
-	rect.x = x;
-	rect.y = y;
+	rect.x = static_cast<Sint16>(x);
+	rect.y = static_cast<Sint16>(y);
+
 	SDL_Surface* s2;
-	if (abs(direction) < 4) {
-		rect.w = dy;
-		rect.h = dx;
-		if (dx < dy)
-			dy = dx;
-		else
-			dx = dy;
+	if (absd < 4) {
+		rect.w = static_cast<Uint16>(dy);
+		rect.h = static_cast<Uint16>(dx);
+		if (dx < dy) dy = dx; else dx = dy;
 		s2 = SDL_CreateRGBSurface(SDL_SWSURFACE, dy, dx, 16, 0, 0, 0, 0);
 	} else {
-		rect.w = dx;
-		rect.h = dy;
+		rect.w = static_cast<Uint16>(dx);
+		rect.h = static_cast<Uint16>(dy);
 		s2 = SDL_CreateRGBSurface(SDL_SWSURFACE, dx, dy, 16, 0, 0, 0, 0);
 	}
+
 	SDL_Surface* s1 = SDL_CreateRGBSurface(SDL_SWSURFACE, dx, dy, 16, 0, 0, 0, 0);
-	SDL_BlitSurface(screen, &rect, s1, NULL);
-	int p1 = s1->pitch / 2;
-	int p2 = s2->pitch / 2;
+	if (!s1 || !s2) {
+		if (s1) SDL_FreeSurface(s1);
+		if (s2) SDL_FreeSurface(s2);
+		return;
+	}
+
+	SDL_BlitSurface(screen, &rect, s1, nullptr);
+
+	const int p1 = s1->pitch / 2;
+	const int p2 = s2->pitch / 2;
+	Uint16* const px1 = static_cast<Uint16*>(s1->pixels);
+	Uint16* const px2 = static_cast<Uint16*>(s2->pixels);
+
+	auto src = [&](int col, int row) -> Uint16 { return *(px1 + row * p1 + col); };
+	auto dst = [&](int col, int row) -> Uint16& { return *(px2 + row * p2 + col); };
+
 	if (direction == -1)
 		for (int x1 = 0; x1 < dx; x1++)
 			for (int y1 = 0; y1 < dy; y1++)
-				*((Uint16*)s2->pixels + x1 * p2 + (dy - y1 - 1)) = *((Uint16*)s1->pixels + y1 * p1 + x1);
+				*(px2 + x1 * p2 + (dy - y1 - 1)) = src(x1, y1);
+
 	if (direction == 1)
 		for (int x1 = 0; x1 < dx; x1++)
 			for (int y1 = 0; y1 < dy; y1++)
-				*((Uint16*)s2->pixels + (dx - x1 - 1) * p2 + y1) = *((Uint16*)s1->pixels + y1 * p1 + x1);
-	if (abs(direction) == 2) {
+				*(px2 + (dx - x1 - 1) * p2 + y1) = src(x1, y1);
+
+	if (absd == 2) {
 		for (int x1 = 0; x1 < dx; x1++)
 			for (int y1 = 0; y1 < dy; y1++)
-				*((Uint16*)s2->pixels + (dx - x1 - 1) * p2 + y1) = *((Uint16*)s1->pixels + y1 * p1 + x1);
-		SDL_Surface* s3 = s2;
-		s2 = s1;
-		s1 = s3;
+				*(px2 + (dx - x1 - 1) * p2 + y1) = src(x1, y1);
+		std::swap(s1, s2);
+
+		const int np1 = s1->pitch / 2;
+		const int np2 = s2->pitch / 2;
+		Uint16* ns1 = static_cast<Uint16*>(s1->pixels);
+		Uint16* ns2 = static_cast<Uint16*>(s2->pixels);
 		for (int x2 = 0; x2 < dx; x2++)
 			for (int y1 = 0; y1 < dy; y1++)
-				*((Uint16*)s2->pixels + (dx - x2 - 1) * p2 + y1) = *((Uint16*)s1->pixels + y1 * p1 + x2);
+				*(ns2 + (dx - x2 - 1) * np2 + y1) = *(ns1 + y1 * np1 + x2);
 	}
-	if (abs(direction) == 3) {
+
+	if (absd == 3) {
 		for (int x1 = 0; x1 < dx; x1++)
 			for (int y1 = 0; y1 < dy; y1++)
-				*((Uint16*)s2->pixels + y1 * p2 + (dx - x1 - 1)) = *((Uint16*)s1->pixels + y1 * p1 + x1);
-		SDL_Surface* s3 = s2;
-		s2 = s1;
-		s1 = s3;
+				*(px2 + y1 * p2 + (dx - x1 - 1)) = src(x1, y1);
+		std::swap(s1, s2);
+		const int np1 = s1->pitch / 2;
+		const int np2 = s2->pitch / 2;
+		Uint16* ns1 = static_cast<Uint16*>(s1->pixels);
+		Uint16* ns2 = static_cast<Uint16*>(s2->pixels);
 		for (int x2 = 0; x2 < dx; x2++)
 			for (int y1 = 0; y1 < dy; y1++)
-				*((Uint16*)s2->pixels + (dy - y1 - 1) * p2 + x2) = *((Uint16*)s1->pixels + y1 * p1 + x2);
+				*(ns2 + (dy - y1 - 1) * np2 + x2) = *(ns1 + y1 * np1 + x2);
 	}
-	if (abs(direction) == 4)
+
+	if (absd == 4)
 		for (int x1 = 0; x1 < dx; x1++)
 			for (int y1 = 0; y1 < dy; y1++)
-				*((Uint16*)s2->pixels + y1 * p2 + (dx - x1 - 1)) = *((Uint16*)s1->pixels + y1 * p1 + x1);
-	if (abs(direction) == 5)
+				dst(dx - x1 - 1, y1) = src(x1, y1);
+
+	if (absd == 5)
 		for (int x1 = 0; x1 < dx; x1++)
 			for (int y1 = 0; y1 < dy; y1++)
-				*((Uint16*)s2->pixels + (dy - y1 - 1) * p2 + x1) = *((Uint16*)s1->pixels + y1 * p1 + x1);
-	SDL_BlitSurface(s2, NULL, screen, &rect);
+				dst(x1, dy - y1 - 1) = src(x1, y1);
+
+	SDL_BlitSurface(s2, nullptr, screen, &rect);
 	SDL_FreeSurface(s1);
 	SDL_FreeSurface(s2);
-	return;
 }
 
 void SDL_CopyStamp16(SDL_Surface* screen, int x, int y, int dx, int dy, int stamp) {
-	if (stamp >= MAX_STAMPS * 2)
-		return;
-	SDL_Rect rect;
-	rect.x = x;
-	rect.y = y;
-	rect.w = dx;
-	rect.h = dy;
-	if (stamps[stamp])
+	if (stamp < 0 || stamp >= MAX_STAMPS * 2) return;
+
+	if (stamps[stamp]) {
 		SDL_FreeSurface(stamps[stamp]);
+		stamps[stamp] = nullptr;
+	}
+
+	SDL_Rect rect = { static_cast<Sint16>(x), static_cast<Sint16>(y),
+					  static_cast<Uint16>(dx), static_cast<Uint16>(dy) };
+
 	stamps[stamp] = SDL_CreateRGBSurface(SDL_SWSURFACE, dx, dy, 16, 0, 0, 0, 0);
-	SDL_BlitSurface(screen, &rect, stamps[stamp], NULL);
-	return;
+	if (!stamps[stamp]) return;
+
+	SDL_BlitSurface(screen, &rect, stamps[stamp], nullptr);
 }
 
 void SDL_PasteStamp16(SDL_Surface* screen, int x, int y, int dx, int dy, int stamp, Uint16 transparent) {
 	if (!stamps) return;
-	if (stamp >= MAX_STAMPS * 2) return;
+	if (stamp < 0 || stamp >= MAX_STAMPS * 2) return;
 	if (!stamps[stamp]) return;
-	SDL_Rect rect;
-	rect.x = x;
-	rect.y = y;
-	rect.w = dy;
-	rect.h = dx;
-	if ((y + dy) >= screen->h)
-		rect.h = screen->h - y;
-	SDL_Rect srcrect;
-	srcrect.x = 0;
-	srcrect.y = 0;
-	srcrect.w = rect.w;
-	srcrect.h = rect.h;
+
+	SDL_Rect rect = { static_cast<Sint16>(x), static_cast<Sint16>(y),
+					  static_cast<Uint16>(dx), static_cast<Uint16>(dy) };
+
+	if (y + dy >= screen->h)
+		rect.h = static_cast<Uint16>(screen->h - y);
+
+	SDL_Rect srcrect = { 0, 0, rect.w, rect.h };
+
 	SDL_SetColorKey(stamps[stamp], SDL_SRCCOLORKEY, transparent);
 	SDL_SetAlpha(stamps[stamp], SDL_RLEACCEL, 255);
 	SDL_BlitSurface(stamps[stamp], &srcrect, screen, &rect);
-	return;
 }
 
 void SDL_SwapPoints16(SDL_Surface* screen, int x, int y, int x2, int y2, bool sand) {
-	if ((x > 0) && (x < screen->w) && (y > 0) && (y < screen->h))
-		if ((x2 > 0) && (x2 < screen->w) && (y2 > 0) && (y2 < screen->h)) {
-			Uint16 t = *((Uint16*)screen->pixels + y * screen->pitch / 2 + x);
-			if (sand && ((t == 1) || (*((Uint16*)screen->pixels + y2 * screen->pitch / 2 + x2) == 1)))
-				return;
-			*((Uint16*)screen->pixels + y * screen->pitch / 2 + x) = *((Uint16*)screen->pixels + y2 * screen->pitch / 2 + x2);
-			*((Uint16*)screen->pixels + y2 * screen->pitch / 2 + x2) = t;
-		}
+	if (x <= 0 || x >= screen->w || y <= 0 || y >= screen->h) return;
+	if (x2 <= 0 || x2 >= screen->w || y2 <= 0 || y2 >= screen->h) return;
+
+	const int pitch = screen->pitch / 2;
+	Uint16* const pixels = static_cast<Uint16*>(screen->pixels);
+	Uint16& pa = *(pixels + y * pitch + x);
+	Uint16& pb = *(pixels + y2 * pitch + x2);
+
+	if (sand && (pa == 1 || pb == 1)) return;
+
+	const Uint16 t = pa;
+	pa = pb;
+	pb = t;
 }

@@ -329,13 +329,13 @@ void drawmenu(SDL_Surface* screen) {
 	static bool lastpreview = false;
 	if (oversand && vshowpreview->value) {
 		vpreview->value = 1;
-		recalccolors(false);
+		recalccolors();
 		recalccolors(true);
 		findTrigger("DRAW", 0)->exec(lastx, lasty, 1, true);
 		vpreview->value = 0;
 		lastpreview = true;
 	} else if (lastpreview) {
-		recalccolors(false);
+		recalccolors();
 		recalccolors(true);
 		lastpreview = false;
 	}
@@ -398,8 +398,7 @@ void drawmenu(SDL_Surface* screen) {
 		Element* e = getElement(0);
 
 		if (view > 0) {
-			colormapneutral = SDL_MapRGB(screen->format,
-				vviewr->value, vviewg->value, vviewb->value);
+			colormapneutral = SDL_MapRGB(screen->format, vviewr->value, vviewg->value, vviewb->value);
 			for (int i = 0; i < maxpos; i++)
 				colormappositiv[i] = SDL_MapRGB(screen->format, i * vviewposr->value / maxpos, i * vviewposg->value / maxpos, i * vviewposb->value / maxpos);
 			for (int i = 0; i < -maxneg; i++)
@@ -489,8 +488,7 @@ void drawmenu(SDL_Surface* screen) {
 				}
 			} else if (view == 11) {
 				for (int x = dstrect.x; x < xto; x++)
-					*(yp + x) = static_cast<Uint16>(
-						(*(yp + x) + *(ypz + (x + dx) / zoom)) / 2);
+					*(yp + x) = static_cast<Uint16>((*(yp + x) + *(ypz + (x + dx) / zoom)) / 2);
 			} else if (view == 12) {
 				for (int x = dstrect.x; x < xto; x++) {
 					const int a = *(yp + x);
@@ -832,8 +830,7 @@ void clickmenu(SDL_Surface* screen, int x, int y, int b, int click) {
 }
 
 void redrawmenu(int i) {
-	if (redraw < i)
-		redraw = i;
+	if (redraw < i) redraw = i;
 }
 
 void addButtonToMenuBar(int i, Button* button) {
@@ -860,8 +857,7 @@ void showSubMenu(int stay, int align) {
 }
 
 void showSubMenu(int stay, int align, int x, int y) {
-	if (align == 0)
-		align = MENU_ALIGN_V;
+	if (align == 0) align = MENU_ALIGN_V;
 	subMenuStay = stay;
 	if (menubuttons[4].size() == 0) {
 		subMenu = -1;
@@ -878,18 +874,6 @@ void showSubMenu(int stay, int align, int x, int y) {
 void hideSubMenu() {
 	subMenu = -1;
 	redrawmenu(3);
-}
-
-int getmenuwidth(int i) {
-	if (i == MENU_BAR_TOP)
-		return MENU_TOP;
-	else if (i == MENU_BAR_LEFT)
-		return MENU_LEFT;
-	else if (i == MENU_BAR_RIGHT)
-		return MENU_RIGHT;
-	else if (i == MENU_BAR_BOTTOM)
-		return MENU_BOTTOM;
-	return 0;
 }
 
 Button::Button() {

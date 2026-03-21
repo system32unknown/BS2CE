@@ -242,7 +242,7 @@ void sanddraw(Uint16 e, int b, int x, int y, int dx, int dy, int a1, int a2) {
 	case COPY_STAMP:
 		if (!preview) {
 			SDL_CopyStamp16(sandSurface, x, y, dx, dy, a1);
-			recalccolors(false);
+			recalccolors();
 			recalccolors(true);
 			SDL_CopyStamp16(outSurface, x, y - 1, dx, dy, a1 + MAX_STAMPS);
 		}
@@ -538,7 +538,7 @@ void precalc(int p) {
 	skip[1] = false;
 
 	if (p >= 2) {
-		recalccolors(false);
+		recalccolors();
 		recalccolors(true);
 	}
 

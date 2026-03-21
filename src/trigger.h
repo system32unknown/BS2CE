@@ -131,18 +131,12 @@ extern bool setreturn;
 void deleteparams(Varint** v);
 
 inline int* calcparams(Varint** v) {
-	if (v == NULL) return NULL;
-	int* r = new int[11];
-	if (v[0]) r[0] = v[0]->val();
-	if (v[1]) r[1] = v[1]->val();
-	if (v[2]) r[2] = v[2]->val(); else return r;
-	if (v[3]) r[3] = v[3]->val();
-	if (v[4]) r[4] = v[4]->val();
-	if (v[5]) r[5] = v[5]->val();
-	if (v[6]) r[6] = v[6]->val(); else return r;
-	if (v[7]) r[7] = v[7]->val();
-	if (v[8]) r[8] = v[8]->val();
-	if (v[9]) r[9] = v[9]->val();
+	if (v == nullptr) return nullptr;
+	int* r = new int[11]();
+	for (int i = 0; i < 10; i++) {
+		if (!v[i]) break;
+		r[i] = v[i]->val();
+	}
 	return r;
 }
 

@@ -891,20 +891,13 @@ char* ActionInteraction::toString() {
 }
 
 ActionInteraction::~ActionInteraction() {
-	std::list<char*>::iterator it;
-	std::list<Varint*>::iterator it2;
-	for (it = elements1.begin(); it != elements1.end(); it++)
-		delete (*it);
-	for (it = elements2.begin(); it != elements2.end(); it++)
-		delete (*it);
-	for (it = toselfs.begin(); it != toselfs.end(); it++)
-		delete (*it);
-	for (it = toothers.begin(); it != toothers.end(); it++)
-		delete (*it);
-	for (it2 = rates.begin(); it2 != rates.end(); it2++)
-		delete (*it2);
-	delete (except);
-	delete (at);
+	for (auto* p : elements1) delete[] p;
+	for (auto* p : elements2) delete[] p;
+	for (auto* p : toselfs) delete[] p;
+	for (auto* p : toothers)  delete[] p;
+	for (auto* p : rates) delete  p;
+	delete[] except;
+	delete at;
 }
 
 void ActionRemoveInteraction::exec() {
@@ -1108,7 +1101,7 @@ void ActionLoad::exec() {
 	case ACTION_SAVE_SCREEN_SAND:
 		if (!strcmp(filename, "FILEDIALOG")) {
 			char* text;
-			if (text = opendialog("PNG File\0*.png\0BMP File\0*.bmp\0BS2 Config\0*.bs2\0", 0)) {
+			if (text = opendialog("PNG File\0*.png\0BMP File\0*.bmp\0BS2 Config\0*.bs2\0", nullptr)) {
 				checkfile(text, false);
 				load(text);
 			}
@@ -1128,8 +1121,7 @@ void ActionLoad::exec() {
 			stamps[id->val()] = SDL_LoadBMP(checkfilename(t));
 		break;
 	case ACTION_SAVE_FGLAYER:
-		if (fglayer)
-			SDL_FreeSurface(fglayer);
+		if (fglayer) SDL_FreeSurface(fglayer);
 		fglayer = 0;
 		if (!strcmp(filename, "FILEDIALOG")) {
 			char* text;
@@ -1143,8 +1135,7 @@ void ActionLoad::exec() {
 		}
 		break;
 	case ACTION_SAVE_BGLAYER:
-		if (bglayer)
-			SDL_FreeSurface(bglayer);
+		if (bglayer) SDL_FreeSurface(bglayer);
 		bglayer = 0;
 		if (!strcmp(filename, "FILEDIALOG")) {
 			char* text;
@@ -1924,7 +1915,7 @@ void ActionList::exec() {
 	}
 	case ACTION_LIST_INTERACTIONS: {
 		print("(INTERACTIONS)", owner);
-		Element* e = getElement(findElement(element, false));
+		Element* e = getElement(findElement(element));
 		for (auto* inter : *e->interactions) {
 			char* s = inter->toString(element);
 			print(s, owner);
@@ -1936,7 +1927,7 @@ void ActionList::exec() {
 	case ACTION_LIST_ELEMENTGROUPS: {
 		snprintf(tmp, sizeof(tmp), "(ELEMENTGROUP:%s)", element);
 		print(tmp, owner);
-		const int i2 = findElement(element, false);
+		const int i2 = findElement(element);
 		const int groups = countGroups();
 		for (int i = 0; i < groups; i++)
 			if (isElementInGroup(getGroup(i), i2))
@@ -1947,7 +1938,7 @@ void ActionList::exec() {
 	case ACTION_LIST_DIETOS: {
 		snprintf(tmp, sizeof(tmp), "(ELEMENTDIETOS:%s)", element);
 		print(tmp, owner);
-		Element* e = getElement(findElement(element, false));
+		Element* e = getElement(findElement(element));
 		for (auto* d : *e->dies) print(getElement(d->dieto)->name, owner);
 		print("(END)", owner);
 		break;
@@ -2049,9 +2040,7 @@ char* ActionList::toString() {
 	return tmp;
 }
 
-ActionList::~ActionList() {
-	return;
-}
+ActionList::~ActionList() {}
 
 void ActionMessage::exec() {
 	char* pos = (messagestring + strlen(messagestring));

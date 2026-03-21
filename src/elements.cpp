@@ -219,19 +219,13 @@ int clearDie(Uint16 id) {
 
 void interactionTrigger(void* trigger, Uint16 element1, Uint16 element2, int x1, int y1, int x2, int y2) {
 	if (element1 == 1 || element2 == 1) return;
-	static Var* vari1 = (Var*)setVar("INTERACTION1", 0);
-	static Var* vari2 = (Var*)setVar("INTERACTION2", 0);
-	static Var* varx1 = (Var*)setVar("X1", 0);
-	static Var* vary1 = (Var*)setVar("Y1", 0);
-	static Var* varx2 = (Var*)setVar("X2", 0);
-	static Var* vary2 = (Var*)setVar("Y2", 0);
-	vari1->value = element1;
-	vari2->value = element2;
-	varx1->value = x1;
-	vary1->value = y1;
-	varx2->value = x2;
-	vary2->value = y2;
-	reinterpret_cast<Trigger*>(trigger)->exec();
+	((Var*)setVar("INTERACTION1", 0))->value = element1;
+	((Var*)setVar("INTERACTION2", 0))->value = element2;
+	((Var*)setVar("X1", 0))->value = x1;
+	((Var*)setVar("Y1", 0))->value = y1;
+	((Var*)setVar("X2", 0))->value = x2;
+	((Var*)setVar("Y2", 0))->value = y2;
+	((Trigger*)trigger)->exec();
 }
 
 int addDie(Uint16 id, Uint16 dieto, Uint16 rate) {

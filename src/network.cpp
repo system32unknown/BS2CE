@@ -143,6 +143,6 @@ int connect(char* host, int port) {
 	return 0;
 }
 
-void disconnect(int) {
+void disconnect() {
 	SDL_Delay(500);
 }
