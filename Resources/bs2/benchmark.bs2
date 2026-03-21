@@ -16,6 +16,7 @@ MENU LEFT ADD TEXT "Empty screen" NUMBER empty <>
 MENU LEFT ADD TEXT "Fullscreen Earth" NUMBER earth <>
 MENU LEFT ADD TEXT "Fullscreen Sand" NUMBER sand <>
 MENU LEFT ADD TEXT "Fullscreen Saltwater" NUMBER saltwater <>
+MENU LEFT ADD TEXT "Fullscreen Fire" NUMBER fire <>
 MENU LEFT ADD TEXT "???" NUMBER ??? <>
 MENU LEFT ADD TEXT "Fireworks" NUMBER firework <>
 MENU LEFT ADD TEXT "Explosions" NUMBER explosion <>
@@ -23,7 +24,7 @@ MENU LEFT ADD TEXT "Draws" NUMBER draw <>
 MENU LEFT ADD TEXT "Save" NUMBER save <>
 MENU LEFT ADD TEXT "Menu Refresh" NUMBER menurefresh <>
 MENU LEFT ADD TEXT "Growing and Burning Plant" NUMBER plant <>
-MENU LEFT ADD TEXT "TOTAL" NUMBER (( empty * 2 + earth + sand + saltwater + ??? + firework + explosion + draw + save + menurefresh + plant ) / 11) <>
+MENU LEFT ADD TEXT "TOTAL" NUMBER (( empty * 2 + earth + sand + saltwater + fire + ??? + firework + explosion + draw + save + menurefresh + plant ) / 11) <>
 
 ON benchmarkempty TIMER (frames * 10) FRAMES benchmarkearth
 ON benchmarkempty SET empty MSEC
@@ -53,7 +54,7 @@ ON benchmarksand MENU TOP ADD TEXT "Benchmarking Fullscreen Sand" TEXT "Benchmar
 ON benchmarksand MENU TOP ADD TEXT "" SEPERATOR 0 <>
 ON benchmarksand SET sand MSEC
 
-ON benchmarksaltwater TIMER frames FRAMES benchmark???
+ON benchmarksaltwater TIMER frames FRAMES benchmarkfire
 ON benchmarksaltwater SET sand ((1000 * frames) / (MSEC - sand))
 ON benchmarksaltwater SET benchmarksaltwaterx 1
 ON benchmarksaltwater WHILE (benchmarksaltwaterx < WIDTH) benchmarksaltwaterline
@@ -64,12 +65,22 @@ ON benchmarksaltwater MENU TOP ADD TEXT "Benchmarking Saltwater" TEXT "Benchmark
 ON benchmarksaltwater MENU TOP ADD TEXT "" SEPERATOR 0 <>
 ON benchmarksaltwater MENU REFRESH
 
+ON benchmarkfire TIMER frames FRAMES benchmark???
+ON benchmarkfire SET saltwater ((1000 * frames) / (MSEC - saltwater))
+ON benchmarkfire DRAW ELEMENT:Fire FILLEDRECT 1 1 WIDTH HEIGHT
+ON benchmarkfire MENU REFRESH
+ON benchmarkfire MENU TOP CLEAR
+ON benchmarkfire MENU TOP ADD TEXT "" SEPERATOR 0 <>
+ON benchmarkfire MENU TOP ADD TEXT "Benchmarking Fullscreen Fire" TEXT "Benchmarking Fullscreen Fire" <>
+ON benchmarkfire MENU TOP ADD TEXT "" SEPERATOR 0 <>
+ON benchmarkfire SET fire MSEC
+
 ON benchmarksaltwaterline DRAW ELEMENT:Water FILLEDRECT benchmarksaltwaterx 1 20 HEIGHT
 ON benchmarksaltwaterline DRAW ELEMENT:Salt FILLEDRECT (benchmarksaltwaterx + 20) 1 20 HEIGHT
 ON benchmarksaltwaterline SET benchmarksaltwaterx (benchmarksaltwaterx + 40)
 
 ON benchmark??? TIMER frames FRAMES benchmarkfirework
-ON benchmark??? SET saltwater ((1000 * frames) / (MSEC - saltwater))
+ON benchmark??? SET fire ((1000 * frames) / (MSEC - fire))
 ON benchmark??? DRAW ELEMENT:Clear FILLEDRECT 1 1 WIDTH HEIGHT
 ON benchmark??? DRAW ELEMENT:??? CIRCLE (WIDTH / 2) (HEIGHT / 2) 100
 ON benchmark??? TIMER (frames / 2) FRAMES <ON draw??? DRAW ELEMENT:??? CIRCLE (WIDTH / 2) (HEIGHT / 2) 100>
